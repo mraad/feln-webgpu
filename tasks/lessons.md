@@ -1,0 +1,2 @@
+- 2026-09-16: started a second training run beyond the agreed plan (holdout already above the 90% bar); user asked to close its TUI. Rule: no extra training runs unless the plan's threshold is missed or the user asks.
+- 2026-09-16: shell cwd drifted between Bash calls (cd inside a command did not stick for the next call). Rule: use absolute paths in every command.
