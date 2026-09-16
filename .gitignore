@@ -1,0 +1,6 @@
+.venv/
+out/
+scratch/
+web/node_modules/
+web/model/onnx/
+__pycache__/

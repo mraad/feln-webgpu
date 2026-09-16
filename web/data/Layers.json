@@ -1,0 +1,1396 @@
+{
+  "layers": [
+    {
+      "name": "Pipelines",
+      "table_name": "Pipelines",
+      "alias": "pipelines",
+      "stype": "Polyline",
+      "display": "pipe_name",
+      "subtype": "PipelinesType",
+      "columns": [
+        {
+          "name": "country",
+          "alias": "country",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "NO": "Norway",
+            "UK": "United Kingdom",
+            "DK": "Denmark",
+            "NL": "Netherland"
+          },
+          "hints": [
+            "Use 'country = 'NO'' for 'norway'.",
+            "Use 'country = 'UK'' for 'united kingdom'.",
+            "Use 'country = 'DK'' for 'denmark'.",
+            "Use 'country = 'NL'' for 'netherland'.",
+            "The country of the pipeline.",
+            "NEVER use SQL LIKE in the WHERE clause for the values of the column country."
+          ],
+          "values": [
+            "NO",
+            "UK",
+            "DK",
+            "NL"
+          ]
+        },
+        {
+          "name": "current_operator",
+          "alias": "current operator",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "The current operator",
+            "Make sure to uppercase the compared values of the column current_operator in the where clause.",
+            "For example: given the value >>gassco as<< becomes >>GASSCO AS<<"
+          ],
+          "values": [
+            "GASSCO AS",
+            "EQUINOR ENERGY AS",
+            "CONOCOPHILLIPS SKANDINAVIA AS",
+            "AKER BP ASA",
+            "OKEA ASA",
+            "A/S NORSKE SHELL",
+            "VÅR ENERGI ASA",
+            "UNKNOWN"
+          ]
+        },
+        {
+          "name": "current_phase",
+          "alias": "current phase",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "The current phase of this pipeline",
+            "Make sure to uppercase the compared values of the column current_phase in the where clause.",
+            "For example: given the value >>in service<< becomes >>IN SERVICE<<"
+          ],
+          "values": [
+            "IN SERVICE",
+            "DECOMMISSIONED",
+            "ABANDONED IN PLACE"
+          ]
+        },
+        {
+          "name": "dimension",
+          "alias": "dimension",
+          "dtype": "Double",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS DOUBLE PRECISION when comparing a value with the column dimension.",
+            "Use 'dimension = cast(36.0 as DOUBLE PRECISION)' for 'dimension is 36.0'."
+          ],
+          "values": [
+            "36.0",
+            "16.0",
+            "20.0",
+            "40.0",
+            "30.0",
+            "28.0",
+            "42.0",
+            "8.0",
+            "34.0",
+            "32.0"
+          ]
+        },
+        {
+          "name": "from_facility",
+          "alias": "from facility",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "The originating facility.",
+            "Make sure to uppercase the compared values of the column from_facility in the where clause.",
+            "For example: given the value >>sleipner r<< becomes >>SLEIPNER R<<"
+          ],
+          "values": [
+            "SLEIPNER R",
+            "KOLLSNES",
+            "TROLL A",
+            "GJØA",
+            "STATFJORD B",
+            "HEIDRUN",
+            "HEIMDAL HRP",
+            "HULDRA",
+            "KÅRSTØ",
+            "DRAUPNER E"
+          ]
+        },
+        {
+          "name": "main_grouping",
+          "alias": "main grouping",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column main_grouping.",
+            "For example: given >>main grouping is transportation<< becomes >>main_grouping ILIKE '%Transportation%'<<"
+          ],
+          "values": [
+            "Transportation"
+          ]
+        },
+        {
+          "name": "medium",
+          "alias": "medium",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "The content of the pipeline, like oil or gas",
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column medium.",
+            "For example: given >>medium is gas<< becomes >>medium ILIKE '%Gas%'<<"
+          ],
+          "values": [
+            "Gas",
+            "Oil",
+            "Condensate",
+            "Injection"
+          ]
+        },
+        {
+          "name": "pipe_name",
+          "alias": "pipe name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column pipe_name.",
+            "For example: given >>pipe name is 36\"<< becomes >>pipe_name ILIKE '%36\"%'<<"
+          ],
+          "values": [
+            "36\" Gas TROLL A, KOLLSNES",
+            "34\" Oil 36/22-BP, TEESSIDE",
+            "34\" Oil 37/4-BP, 36/22-BP",
+            "42\" Gas ÅSGARD ERB, KÅRSTØ",
+            "20\" Gas TOGI, OSEBERG B",
+            "16\" Oil GJØA, TOR II Y",
+            "26\" Gas SKARV ERB, ÅSGARD T",
+            "36\" Gas Disconnected, EKOFISK S",
+            "8\" Condensate KOLLSNES, STURE",
+            "20\" Oil ULA PP, EKOFISK J"
+          ]
+        },
+        {
+          "name": "to_facility",
+          "alias": "to facility",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "The destination facility",
+            "Make sure to uppercase the compared values of the column to_facility in the where clause.",
+            "For example: given the value >>kollsnes<< becomes >>KOLLSNES<<"
+          ],
+          "values": [
+            "KOLLSNES",
+            "MONGSTAD",
+            "KÅRSTØ",
+            "STURE",
+            "EMDEN",
+            "DRAUPNER S",
+            "NYHAMNA",
+            "TOR II Y",
+            "NORNE/HEIDRUN T",
+            "HEIMDAL HRP"
+          ]
+        },
+        {
+          "name": "PipelinesType",
+          "alias": "pipelines type",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "1": "Condensate",
+            "2": "Gas",
+            "3": "Injection",
+            "4": "Oil",
+            "0": "Unknown"
+          },
+          "hints": [
+            "Use 'PipelinesType = cast(1 as SMALLINT)' for 'condensate'.",
+            "Use 'PipelinesType = cast(2 as SMALLINT)' for 'gas'.",
+            "Use 'PipelinesType = cast(3 as SMALLINT)' for 'injection'.",
+            "Use 'PipelinesType = cast(4 as SMALLINT)' for 'oil'.",
+            "Use 'PipelinesType = cast(0 as SMALLINT)' for 'unknown'.",
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column PipelinesType."
+          ],
+          "values": [
+            "2",
+            "4",
+            "1",
+            "3",
+            "0"
+          ]
+        }
+      ],
+      "hints": [
+        "Pipelines in the North Sea in various phases."
+      ],
+      "uri": "C:\\Mac\\Home\\Documents\\ArcGIS\\Projects\\NorthSea\\NorthSea.gdb\\Pipelines"
+    },
+    {
+      "name": "Wells",
+      "table_name": "Wells",
+      "alias": "wells",
+      "stype": "Point",
+      "display": "well_name",
+      "subtype": "content_type",
+      "columns": [
+        {
+          "name": "well_name",
+          "alias": "well name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "The name of the well",
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column well_name.",
+            "For example: given >>well name is 22/02b-<< becomes >>well_name ILIKE '%22/02b-%'<<"
+          ],
+          "values": [
+            "22/02b- 14",
+            "22/14b- 6",
+            "9/23a- 29",
+            "22/02b- 13",
+            "21/23a- 9",
+            "213/25c- 1",
+            "21/10- 10",
+            "25/1-7",
+            "25/1-8",
+            "15/9-19"
+          ]
+        },
+        {
+          "name": "wellbore_name",
+          "alias": "wellbore name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column wellbore_name.",
+            "For example: given >>wellbore name is m-1x<< becomes >>wellbore_name ILIKE '%M-1X%'<<"
+          ],
+          "values": [
+            "M-1X",
+            "GERT-1",
+            "7120/7-1",
+            "1/3-3",
+            "25/5-1",
+            "34/10-37",
+            "6406/2-1",
+            "6407/7-7 S",
+            "25/8-17",
+            "6406/9-3"
+          ]
+        },
+        {
+          "name": "purpose",
+          "alias": "purpose",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column purpose in the where clause.",
+            "For example: given the value >>exploration<< becomes >>EXPLORATION<<"
+          ],
+          "values": [
+            "EXPLORATION",
+            "APPRAISAL",
+            "HYDROCARBON EXPLORATION",
+            "WILDCAT",
+            "PRODUCTION",
+            "UNKNOWN",
+            "INJECTION",
+            "STORAGE",
+            "APPRAISAL-CCS",
+            "OTHER"
+          ]
+        },
+        {
+          "name": "content",
+          "alias": "content",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column content in the where clause.",
+            "For example: given the value >>dry<< becomes >>DRY<<"
+          ],
+          "values": [
+            "DRY",
+            "OIL",
+            "GAS",
+            "NOT AVAILABLE",
+            "OIL/GAS",
+            "OIL SHOW",
+            "NOT APPLICABLE",
+            "GAS/CONDENSATE",
+            "GAS SHOWS",
+            "SHOWS"
+          ]
+        },
+        {
+          "name": "field_name",
+          "alias": "field name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "The name of the field",
+            "Make sure to uppercase the compared values of the column field_name in the where clause.",
+            "For example: given the value >>troll<< becomes >>TROLL<<"
+          ],
+          "values": [
+            "TROLL",
+            "OSEBERG",
+            "BALDER",
+            "GULLFAKS",
+            "GULLFAKS SØR",
+            "JOHAN SVERDRUP",
+            "ÅSGARD",
+            "SNØHVIT",
+            "OSEBERG SØR",
+            "FRIGG"
+          ]
+        },
+        {
+          "name": "multilateral",
+          "alias": "multilateral",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column multilateral in the where clause.",
+            "For example: given the value >>no<< becomes >>NO<<",
+            "Text for value YES: that are multilateral.",
+            "Text for value NO: that are not multilateral."
+          ],
+          "values": [
+            "NO"
+          ]
+        },
+        {
+          "name": "entry_date",
+          "alias": "entry date",
+          "dtype": "Date",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [],
+          "values": [
+            "1991-04-15 00:00:00",
+            "1985-10-18 00:00:00",
+            "2007-10-08 00:00:00",
+            "2009-10-17 00:00:00",
+            "1990-10-12 00:00:00",
+            "1991-06-06 00:00:00",
+            "1982-01-09 00:00:00",
+            "1973-12-25 00:00:00",
+            "1997-01-29 00:00:00",
+            "1983-03-16 00:00:00"
+          ]
+        },
+        {
+          "name": "completion_date",
+          "alias": "completion date",
+          "dtype": "Date",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [],
+          "values": [
+            "1990-05-07 00:00:00",
+            "1988-10-22 00:00:00",
+            "1981-11-07 00:00:00",
+            "1997-04-05 00:00:00",
+            "1989-03-28 00:00:00",
+            "2002-12-13 00:00:00",
+            "2009-10-17 00:00:00",
+            "1991-09-27 00:00:00",
+            "1977-10-03 00:00:00",
+            "1984-06-07 00:00:00"
+          ]
+        },
+        {
+          "name": "status",
+          "alias": "status",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column status in the where clause.",
+            "For example: given the value >>abandoned phase 3<< becomes >>ABANDONED PHASE 3<<"
+          ],
+          "values": [
+            "ABANDONED PHASE 3",
+            "P&A",
+            "ABANDONED PHASE 1",
+            "ABANDONED PHASE 2",
+            "SUSPENDED",
+            "PLUGGED",
+            "JUNKED",
+            "RE-CLASS TO DEV",
+            "COMPLETED (SHUT IN)",
+            "COMPLETED (OPERATING)"
+          ]
+        },
+        {
+          "name": "water_depth",
+          "alias": "water depth",
+          "dtype": "Double",
+          "utype": "meters",
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Water depth at the well location, in meters.",
+            "ALWAYS use SQL CAST AS DOUBLE PRECISION when comparing a value with the column water_depth.",
+            "Use 'water_depth = cast(110.0 as DOUBLE PRECISION)' for 'water depth is 110.0'."
+          ],
+          "values": [
+            "110.0",
+            "92.964",
+            "70.0",
+            "32.004",
+            "69.0",
+            "90.5256",
+            "71.0",
+            "66.0",
+            "121.0",
+            "120.0"
+          ]
+        },
+        {
+          "name": "production_facility",
+          "alias": "production facility",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column production_facility in the where clause.",
+            "For example: given the value >>varg a<< becomes >>VARG A<<"
+          ],
+          "values": [
+            "VARG A",
+            "MARTIN LINGE A",
+            "VALEMON",
+            "FENJA G",
+            "ORMEN LANGE C",
+            "BRAGE",
+            "FOSSEKALL R",
+            "VIGDIS E",
+            "ÅSGARD NB"
+          ]
+        },
+        {
+          "name": "source",
+          "alias": "source",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "NPD": "Norwegian Petroleum Directorate",
+            "DECC": "Department of Energy & Climate Change",
+            "DEA": "Danish Energy Agency",
+            "NLOG": "NL Oil and GAS Portal"
+          },
+          "hints": [
+            "Use 'source = 'NPD'' for 'norwegian petroleum directorate'.",
+            "Use 'source = 'DECC'' for 'department of energy & climate change'.",
+            "Use 'source = 'DEA'' for 'danish energy agency'.",
+            "Use 'source = 'NLOG'' for 'nl oil and gas portal'.",
+            "NEVER use SQL LIKE in the WHERE clause for the values of the column source."
+          ],
+          "values": [
+            "OGA",
+            "NPD",
+            "NLOG",
+            "DEA/GEUS",
+            "DEA",
+            "DECC"
+          ]
+        },
+        {
+          "name": "well_type",
+          "alias": "well type",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column well_type in the where clause.",
+            "For example: given the value >>exploration<< becomes >>EXPLORATION<<"
+          ],
+          "values": [
+            "EXPLORATION"
+          ]
+        },
+        {
+          "name": "discovery_wellbore",
+          "alias": "discovery wellbore",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column discovery_wellbore in the where clause.",
+            "For example: given the value >>no<< becomes >>NO<<",
+            "Text for value YES: that are discovery wellbores.",
+            "Text for value NO: that are not discovery wellbores."
+          ],
+          "values": [
+            "NO",
+            "YES"
+          ]
+        },
+        {
+          "name": "drilling_operator",
+          "alias": "drilling operator",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column drilling_operator.",
+            "For example: given >>drilling operator is unknown<< becomes >>drilling_operator ILIKE '%Unknown%'<<"
+          ],
+          "values": [
+            "Unknown",
+            "No Data Available",
+            "Den Norske Stats Oljeselskap A.S",
+            "Chrysaor Production (U.K.) Limited",
+            "Norsk Hydro Produksjon As",
+            "Perenco Uk Limited",
+            "Bp Exploration Operating Company Limited",
+            "Repsol Resources Uk Limited",
+            "Apache Beryl I Limited",
+            "Shell U.K. Limited"
+          ]
+        },
+        {
+          "name": "drilling_facility",
+          "alias": "drilling facility",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column drilling_facility.",
+            "For example: given >>drilling facility is unknown<< becomes >>drilling_facility ILIKE '%Unknown%'<<"
+          ],
+          "values": [
+            "Unknown",
+            "Deepsea Bergen",
+            "Transocean Arctic",
+            "Treasure Saga",
+            "Polar Pioneer",
+            "Bredford Dolphin",
+            "West Vanguard",
+            "Deepsea Stavanger",
+            "Ocean Vanguard",
+            "Borgland Dolphin"
+          ]
+        },
+        {
+          "name": "production_licence",
+          "alias": "production licence",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column production_licence.",
+            "For example: given >>production licence is 01/62<< becomes >>production_licence ILIKE '%01/62%'<<"
+          ],
+          "values": [
+            "01/62",
+            "050",
+            "018",
+            "089",
+            "053",
+            "01/35",
+            "054",
+            "120",
+            "128",
+            "006"
+          ]
+        },
+        {
+          "name": "country",
+          "alias": "country",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "NO": "Norway",
+            "UK": "United Kingdom",
+            "DK": "Denmark",
+            "NL": "Netherland"
+          },
+          "hints": [
+            "Use 'country = 'NO'' for 'norway'.",
+            "Use 'country = 'UK'' for 'united kingdom'.",
+            "Use 'country = 'DK'' for 'denmark'.",
+            "Use 'country = 'NL'' for 'netherland'.",
+            "The country where the well is located",
+            "NEVER use SQL LIKE in the WHERE clause for the values of the column country."
+          ],
+          "values": [
+            "UK",
+            "NO",
+            "NL",
+            "DK"
+          ]
+        },
+        {
+          "name": "formation_tops",
+          "alias": "formation tops",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column formation_tops.",
+            "Use 'formation_tops = cast(1 as SMALLINT)' for 'formation tops is 1'."
+          ],
+          "values": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "name": "geochem_info",
+          "alias": "geochemical information",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column geochem_info.",
+            "Use 'geochem_info = cast(0 as SMALLINT)' for 'geochemical information is 0'."
+          ],
+          "values": [
+            "0",
+            "1"
+          ]
+        },
+        {
+          "name": "log",
+          "alias": "well logs",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column log.",
+            "Use 'log = cast(1 as SMALLINT)' for 'well logs is 1'."
+          ],
+          "values": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "name": "mud",
+          "alias": "mud records",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column mud.",
+            "Use 'mud = cast(1 as SMALLINT)' for 'mud records is 1'."
+          ],
+          "values": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "name": "oil_samples",
+          "alias": "oil samples",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column oil_samples.",
+            "Use 'oil_samples = cast(0 as SMALLINT)' for 'oil samples is 0'."
+          ],
+          "values": [
+            "0",
+            "1"
+          ]
+        },
+        {
+          "name": "old_wdss",
+          "alias": "old WDSS records",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column old_wdss.",
+            "Use 'old_wdss = cast(0 as SMALLINT)' for 'old WDSS records is 0'."
+          ],
+          "values": [
+            "0",
+            "1"
+          ]
+        },
+        {
+          "name": "paly_slides",
+          "alias": "paly slides",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column paly_slides.",
+            "Use 'paly_slides = cast(0 as SMALLINT)' for 'paly slides is 0'."
+          ],
+          "values": [
+            "0",
+            "1"
+          ]
+        },
+        {
+          "name": "wellbore_history",
+          "alias": "wellbore history",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column wellbore_history.",
+            "Use 'wellbore_history = cast(1 as SMALLINT)' for 'wellbore history is 1'."
+          ],
+          "values": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "name": "npd_papers",
+          "alias": "NPD papers",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column npd_papers.",
+            "Use 'npd_papers = cast(0 as SMALLINT)' for 'NPD papers is 0'."
+          ],
+          "values": [
+            "0",
+            "1"
+          ]
+        },
+        {
+          "name": "cuttings_sample",
+          "alias": "cuttings samples",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column cuttings_sample in the where clause.",
+            "For example: given the value >>yes<< becomes >>YES<<",
+            "Text for value YES: with cuttings samples.",
+            "Text for value NO: without cuttings samples."
+          ],
+          "values": [
+            "YES",
+            "NO"
+          ]
+        },
+        {
+          "name": "core_sample",
+          "alias": "core samples",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column core_sample in the where clause.",
+            "For example: given the value >>yes<< becomes >>YES<<",
+            "Text for value YES: with core samples.",
+            "Text for value NO: without core samples."
+          ],
+          "values": [
+            "YES",
+            "NO"
+          ]
+        },
+        {
+          "name": "doc_by_licensee",
+          "alias": "licensee documents",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column doc_by_licensee.",
+            "Use 'doc_by_licensee = cast(1 as SMALLINT)' for 'licensee documents is 1'."
+          ],
+          "values": [
+            "1",
+            "0"
+          ]
+        },
+        {
+          "name": "CountryName",
+          "alias": "country name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column CountryName.",
+            "For example: given >>countryname is united<< becomes >>CountryName ILIKE '%United%'<<"
+          ],
+          "values": [
+            "United Kingdom",
+            "Norway",
+            "Netherland",
+            "Denmark"
+          ]
+        },
+        {
+          "name": "content_type",
+          "alias": "content type",
+          "dtype": "SmallInteger",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "0": "DRY",
+            "1": "OIL",
+            "2": "GAS",
+            "3": "NOT AVAILABLE",
+            "4": "OIL SHOWS",
+            "5": "OIL/GAS",
+            "6": "NOT APPLICABLE",
+            "7": "GAS/CONDENSATE",
+            "8": "GAS SHOWS",
+            "9": "SHOWS",
+            "10": "OIL/GAS SHOWS",
+            "11": "GAS/CONDENSATE SHOWS",
+            "12": "OIL/CONDENSATE SHOWS",
+            "13": "OIL/GAS/CONDENSATE",
+            "14": "WATER",
+            "15": "OIL/CONDENSATE",
+            "16": "UNKNOWN",
+            "17": "SALT"
+          },
+          "hints": [
+            "Use 'content_type = cast(0 as SMALLINT)' for 'dry'.",
+            "Use 'content_type = cast(1 as SMALLINT)' for 'oil'.",
+            "Use 'content_type = cast(2 as SMALLINT)' for 'gas'.",
+            "Use 'content_type = cast(3 as SMALLINT)' for 'not available'.",
+            "Use 'content_type = cast(4 as SMALLINT)' for 'oil shows'.",
+            "Use 'content_type = cast(5 as SMALLINT)' for 'oil/gas'.",
+            "Use 'content_type = cast(6 as SMALLINT)' for 'not applicable'.",
+            "Use 'content_type = cast(7 as SMALLINT)' for 'gas/condensate'.",
+            "Use 'content_type = cast(8 as SMALLINT)' for 'gas shows'.",
+            "Use 'content_type = cast(9 as SMALLINT)' for 'shows'.",
+            "Use 'content_type = cast(10 as SMALLINT)' for 'oil/gas shows'.",
+            "Use 'content_type = cast(11 as SMALLINT)' for 'gas/condensate shows'.",
+            "Use 'content_type = cast(12 as SMALLINT)' for 'oil/condensate shows'.",
+            "Use 'content_type = cast(13 as SMALLINT)' for 'oil/gas/condensate'.",
+            "Use 'content_type = cast(14 as SMALLINT)' for 'water'.",
+            "Use 'content_type = cast(15 as SMALLINT)' for 'oil/condensate'.",
+            "Use 'content_type = cast(16 as SMALLINT)' for 'unknown'.",
+            "Use 'content_type = cast(17 as SMALLINT)' for 'salt'.",
+            "ALWAYS use SQL CAST AS SMALLINT when comparing a value with the column content_type."
+          ],
+          "values": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "16",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "17"
+          ]
+        }
+      ],
+      "hints": [
+        "Oil and gas wells in the north sea."
+      ],
+      "uri": "C:\\Mac\\Home\\Documents\\ArcGIS\\Projects\\NorthSea\\NorthSea.gdb\\Wellbores"
+    },
+    {
+      "name": "Discoveries",
+      "table_name": "Discoveries",
+      "alias": "discoveries",
+      "stype": "Polygon",
+      "display": "discovery_name",
+      "subtype": "discovery_type",
+      "columns": [
+        {
+          "name": "discovery_name",
+          "alias": "discovery name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column discovery_name.",
+            "For example: given >>discovery name is 7220/8-2<< becomes >>discovery_name ILIKE '%7220/8-2%'<<"
+          ],
+          "values": [
+            "7220/8-2 S (Snøfonn Nord)",
+            "6506/11-10 Berling",
+            "7122/7-1 Goliat",
+            "34/7-23 S",
+            "31/6-1 (Troll Øst)",
+            "16/1-8 Edvard Grieg",
+            "34/8-1 Visund",
+            "34/7-8 Vigdis",
+            "7120/12-2 (Alke Sør)",
+            "35/11-24 S (Swisher)"
+          ]
+        },
+        {
+          "name": "discovery_type",
+          "alias": "discovery type",
+          "dtype": "Integer",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "-1": "Unknown",
+            "1": "Gas",
+            "2": "Gas/Condensate",
+            "3": "Oil",
+            "4": "Oil/Gas",
+            "5": "Condensate"
+          },
+          "hints": [
+            "Use 'discovery_type = cast(-1 as INTEGER)' for 'unknown'.",
+            "Use 'discovery_type = cast(1 as INTEGER)' for 'gas'.",
+            "Use 'discovery_type = cast(2 as INTEGER)' for 'gas/condensate'.",
+            "Use 'discovery_type = cast(3 as INTEGER)' for 'oil'.",
+            "Use 'discovery_type = cast(4 as INTEGER)' for 'oil/gas'.",
+            "Use 'discovery_type = cast(5 as INTEGER)' for 'condensate'.",
+            "ALWAYS use SQL CAST AS INTEGER when comparing a value with the column discovery_type."
+          ],
+          "values": [
+            "1",
+            "3",
+            "4",
+            "2",
+            "5",
+            "-1"
+          ]
+        },
+        {
+          "name": "included_in_field",
+          "alias": "included in field",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column included_in_field in the where clause.",
+            "For example: given the value >>yes<< becomes >>YES<<",
+            "Text for value YES: that are included in a field.",
+            "Text for value NO: that are not included in a field."
+          ],
+          "values": [
+            "YES",
+            "NO"
+          ]
+        },
+        {
+          "name": "included_in_discovery_name",
+          "alias": "included in discovery name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column included_in_discovery_name.",
+            "For example: given >>included in discovery name is 34/10-2<< becomes >>included_in_discovery_name ILIKE '%34/10-2%'<<"
+          ],
+          "values": [
+            "34/10-2 Gullfaks Sør",
+            "30/9-3 Oseberg Sør",
+            "7220/8-1 Johan Castberg",
+            "30/11-8 S Munin",
+            "7121/4-1 Snøhvit",
+            "30/6-1 Oseberg",
+            "35/11-4 Fram",
+            "6507/11-1 Midgard",
+            "24/6-2 Alvheim",
+            "34/7-8 Vigdis"
+          ]
+        },
+        {
+          "name": "field_label",
+          "alias": "field label",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column field_label in the where clause.",
+            "For example: given the value >>gullfaks sør<< becomes >>GULLFAKS SØR<<"
+          ],
+          "values": [
+            "GULLFAKS SØR",
+            "OSEBERG SØR",
+            "JOHAN CASTBERG",
+            "OSEBERG",
+            "MUNIN",
+            "SNØHVIT",
+            "FRAM",
+            "VIGDIS",
+            "GOLIAT",
+            "ÅSGARD"
+          ]
+        },
+        {
+          "name": "discovery_hc_type",
+          "alias": "discovery hydrocarbon type",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column discovery_hc_type in the where clause.",
+            "For example: given the value >>gas<< becomes >>GAS<<"
+          ],
+          "values": [
+            "GAS",
+            "OIL",
+            "OIL/GAS",
+            "GAS/CONDENSATE",
+            "CONDENSATE"
+          ]
+        },
+        {
+          "name": "source",
+          "alias": "source",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "NPD": "Norwegian Petroleum Directorate",
+            "DECC": "Department of Energy & Climate Change",
+            "DEA": "Danish Energy Agency",
+            "NLOG": "NL Oil and GAS Portal"
+          },
+          "hints": [
+            "Use 'source = 'NPD'' for 'norwegian petroleum directorate'.",
+            "Use 'source = 'DECC'' for 'department of energy & climate change'.",
+            "Use 'source = 'DEA'' for 'danish energy agency'.",
+            "Use 'source = 'NLOG'' for 'nl oil and gas portal'.",
+            "NEVER use SQL LIKE in the WHERE clause for the values of the column source."
+          ],
+          "values": [
+            "NPD",
+            "NLOG",
+            "OGA",
+            "DEA",
+            "DECC"
+          ]
+        },
+        {
+          "name": "field_name",
+          "alias": "field name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column field_name in the where clause.",
+            "For example: given the value >>gullfaks sør<< becomes >>GULLFAKS SØR<<"
+          ],
+          "values": [
+            "GULLFAKS SØR",
+            "OSEBERG SØR",
+            "JOHAN CASTBERG",
+            "OSEBERG",
+            "MUNIN",
+            "SNØHVIT",
+            "FRAM",
+            "VIGDIS",
+            "GOLIAT",
+            "ÅSGARD"
+          ]
+        },
+        {
+          "name": "field_hc_type",
+          "alias": "field hydrocarbon type",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column field_hc_type in the where clause.",
+            "For example: given the value >>gas<< becomes >>GAS<<"
+          ],
+          "values": [
+            "GAS",
+            "OIL",
+            "OIL/GAS",
+            "GAS/CONDENSATE",
+            "CONDENSATE",
+            "OIL/CONDENSATE"
+          ]
+        },
+        {
+          "name": "field_current_activity_status",
+          "alias": "field current activity status",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column field_current_activity_status in the where clause.",
+            "For example: given the value >>unknown<< becomes >>UNKNOWN<<"
+          ],
+          "values": [
+            "UNKNOWN",
+            "PRODUCING",
+            "PRODUCTION CEASED",
+            "APPROVED FOR PRODUCT",
+            "SHUT DOWN",
+            "POST-COP",
+            "PRODUCTION SUSPENDED - POSSIBLE RESERVES REMAIN",
+            "CONSTRUCTION-FDP APPROV",
+            "PRODUCTION CEASED - VENT CONSENT NEEDED",
+            "UNDER APPRAIS - NO FDP"
+          ]
+        },
+        {
+          "name": "discovery_current_activity_sta",
+          "alias": "discovery current activity status",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to uppercase the compared values of the column discovery_current_activity_sta in the where clause.",
+            "For example: given the value >>producing<< becomes >>PRODUCING<<"
+          ],
+          "values": [
+            "PRODUCING",
+            "INCLUDED IN OTHER DISCOVERY",
+            "PRODUCTION IS UNLIKELY",
+            "PRODUCTION CEASED",
+            "PRODUCTION LIKELY BUT UNCLARIFIED",
+            "POST-COP",
+            "PRODUCTION NOT EVALUATED",
+            "SHUT DOWN",
+            "APPROVED FOR PRODUCTION",
+            "PRODUCTION SUSPENDED - POSSIBLE RESERVES"
+          ]
+        },
+        {
+          "name": "discovery_wellbore_name",
+          "alias": "discovery wellbore name",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column discovery_wellbore_name.",
+            "For example: given >>discovery wellbore name is 42/30-<< becomes >>discovery_wellbore_name ILIKE '%42/30-%'<<"
+          ],
+          "values": [
+            "42/30- 2",
+            "22/05B- 2",
+            "21/30- 6A",
+            "98/07- 2",
+            "22/30A- 5",
+            "110/15- 6",
+            "3/04- 4",
+            "21/24- 3",
+            "211/13- 2",
+            "21/24- 1"
+          ]
+        },
+        {
+          "name": "country",
+          "alias": "country",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {
+            "NO": "Norway",
+            "UK": "United Kingdom",
+            "DK": "Denmark",
+            "NL": "Netherland"
+          },
+          "hints": [
+            "Use 'country = 'NO'' for 'norway'.",
+            "Use 'country = 'UK'' for 'united kingdom'.",
+            "Use 'country = 'DK'' for 'denmark'.",
+            "Use 'country = 'NL'' for 'netherland'.",
+            "NEVER use SQL LIKE in the WHERE clause for the values of the column country."
+          ],
+          "values": [
+            "NO",
+            "NL",
+            "UK",
+            "DK"
+          ]
+        }
+      ],
+      "hints": [
+        "Discover fields with various hydrocarbon content."
+      ],
+      "uri": "C:\\Mac\\Home\\Documents\\ArcGIS\\Projects\\NorthSea\\NorthSea.gdb\\Discoveries"
+    },
+    {
+      "name": "Wells_depth_stats",
+      "table_name": "Wells_depth_stats",
+      "alias": "well depth statistics",
+      "stype": "Table",
+      "display": "Statistic",
+      "subtype": "",
+      "columns": [
+        {
+          "name": "Statistic",
+          "alias": "statistic",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column Statistic.",
+            "For example: given >>statistic is count<< becomes >>Statistic ILIKE '%Count%'<<"
+          ],
+          "values": [
+            "Count",
+            "Minimum",
+            "Maximum",
+            "Range",
+            "Mean",
+            "Median",
+            "Std Dev",
+            "Variance"
+          ]
+        },
+        {
+          "name": "Value",
+          "alias": "value",
+          "dtype": "Double",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS DOUBLE PRECISION when comparing a value with the column Value.",
+            "Use 'Value = cast(286.0 as DOUBLE PRECISION)' for 'value is 286.0'."
+          ],
+          "values": [
+            "286.0",
+            "400.8",
+            "1886.407",
+            "1485.607",
+            "752.638",
+            "592.566",
+            "360.3604",
+            "129859.6"
+          ]
+        }
+      ],
+      "hints": [],
+      "uri": "C:\\Mac\\Home\\Documents\\ArcGIS\\Projects\\NorthSea\\scratch.gdb\\Wells_depth_stats"
+    },
+    {
+      "name": "Wells_deep_400_stats",
+      "table_name": "Wells_deep_400_stats",
+      "alias": "well depth statistics for depths over 400 meters",
+      "stype": "Table",
+      "display": "statistic",
+      "subtype": "",
+      "columns": [
+        {
+          "name": "statistic",
+          "alias": "statistic",
+          "dtype": "String",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "Make sure to use the SQL ILIKE in the WHERE clause for the values of the column statistic.",
+            "For example: given >>statistic is count<< becomes >>statistic ILIKE '%Count%'<<"
+          ],
+          "values": [
+            "Count (wells > 400 m)",
+            "Minimum depth (m)",
+            "Maximum depth (m)",
+            "Range (m)",
+            "Mean depth (m)",
+            "Median depth (m)",
+            "Std dev (population, m)",
+            "Std dev (sample, m)",
+            "Min z-score",
+            "Max z-score"
+          ]
+        },
+        {
+          "name": "value",
+          "alias": "value",
+          "dtype": "Double",
+          "utype": null,
+          "minmax": [],
+          "keyval": {},
+          "hints": [
+            "ALWAYS use SQL CAST AS DOUBLE PRECISION when comparing a value with the column value.",
+            "Use 'value = cast(286.0 as DOUBLE PRECISION)' for 'value is 286.0'."
+          ],
+          "values": [
+            "286.0",
+            "400.8",
+            "1886.407",
+            "1485.607",
+            "752.638",
+            "592.566",
+            "359.73",
+            "360.3604",
+            "-0.978063",
+            "3.15172"
+          ]
+        }
+      ],
+      "hints": [],
+      "uri": "C:\\Mac\\Home\\Documents\\ArcGIS\\Projects\\NorthSea\\scratch.gdb\\Wells_deep_400_stats"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[project]
+name = "feln-webgpu"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "accelerate>=1.15.0",
+    "datasets>=5.0.1",
+    "duckdb>=1.5.5",
+    "feln",
+    "onnx>=1.22.0",
+    "onnx-ir>=1.0.0",
+    "onnxruntime>=1.30.0",
+    "torch>=2.14.0",
+    "transformers>=5.17.0",
+    "trl>=1.13.0",
+]
+
+[tool.uv.sources]
+feln = { path = "../feln" }
+
