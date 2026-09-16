@@ -1,7 +1,6 @@
-Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 24195.39it/s]
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 75637.50it/s]
 [transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
 [transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
-[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
   0/210
   20/210
   40/210
@@ -14,14 +13,12 @@
   180/210
   200/210
 
-=== val.jsonl n=210 ~/GWorkspace/feln-webgpu/out/lfm2-350m-feln-v4 ===
+=== val.jsonl n=210 ~/GWorkspace/feln-webgpu/out/lfm25-1.2b-feln-v4 ===
   valid      210/210
-  exact      203/210  96.7%
-  structural 0.997
+  exact      204/210  97.1%
+  structural 0.999
   sql_ok     210/210
-  exec       210  jaccard 0.990
---- MISS ---
-{"q": "Unknown pipelines outside Denmark, please.", "pred": {"layers": ["Pipelines"], "where": ["PipelinesType = cast(0 as SMALLINT) and (country = 'DK')"], "relations": []}, "gold": {"layers": ["Pipelines"], "where": ["PipelinesType = cast(0 as SMALLINT) and (country <> 'DK')"], "relations": []}}
+  exec       210  jaccard 0.995
 --- MISS ---
 {"q": "I need all wells with status not 'COMPLETED (SHUT IN)' and source Danish Energy Agency, within 15 kilometers of oil pipelines but more than 50 miles from any matching condensate discovery.", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN') and (source = 'DEA')", "PipelinesType = cast(4 as SMALLINT)", "discovery_type = cast(5 as INTEGER)"], "relations": ["withinDistance 15 kilometers", "notWithinDistance 50 miles"]}, "gold": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN)') and (source = 'DE
 --- MISS ---
@@ -35,7 +32,5 @@
 --- MISS ---
 {"q": "Find me wells with a blank content field that are within 10.5 miles of injection pipelines with dimension no more than 28.0 — and only the ones that lie inside a discovery.", "sql_error": "Binder Error: Referenced column \"content_field\" not found in FROM clause!\nCandidate bindings: \"content\", \"content_type\", \"entity_id\", \"completion_date\", \"geochem_info\"", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["content_field = ''", "PipelinesType = cast(3 as SMALLINT) and (dimension <= cast(28.0 as DOUBLE PRECISION))", ""], "relations": ["withinDistance 10.5 mi
 --- MISS ---
-{"q": "Show me all wells where (status is not 'COMPLETED (SHUT IN)') and (source is Danish Energy Agency). The returned wells must be within 15 kilometers of oil pipelines. The returned wells must be more than 50 miles from all matching condensate discoveries.", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN')') and (source = 'DEA')", "PipelinesType = cast(4 as SMALLINT)", "discovery_type = cast(5 as INTEGER)"], "relations": ["withinDistance 15 kilometers", "notWithinDistance 50 miles"]}, "gold": {"layers": ["Wells", "Pipelines", "Discoverie
---- MISS ---
-{"q": "Show me all wells where (status is not 'COMPLETED (SHUT IN)') and (source is Danish Energy Agency). The returned wells must be within 15 kilometers of oil pipelines. The returned wells must be more than 50 miles from all matching condensate discoveries.", "sql_error": "Parser Error: syntax error at or near \"') and (source = '\"\n\nLINE 3:     FROM Wells WHERE (status <> 'COMPLETED (SHUT IN')') and (source = 'DEA')\n                                                       ", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN')') and (source
-(9 misses total)
+{"q": "Show me all wells where (status is not 'COMPLETED (SHUT IN)') and (source is Danish Energy Agency). The returned wells must be within 15 kilometers of oil pipelines. The returned wells must be more than 50 miles from all matching condensate discoveries.", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN') and (source = 'DEA')", "PipelinesType = cast(4 as SMALLINT)", "discovery_type = cast(5 as INTEGER)"], "relations": ["withinDistance 15 kilometers", "notWithinDistance 50 miles"]}, "gold": {"layers": ["Wells", "Pipelines", "Discoveries"
+(7 misses total)
