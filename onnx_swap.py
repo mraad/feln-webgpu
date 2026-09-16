@@ -75,6 +75,7 @@ def main() -> None:
         print("  UNMAPPED", u)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
+    out.with_name(out.name + "_data").unlink(missing_ok=True)  # onnx.save appends to an existing data file
     onnx.save(m, str(out), save_as_external_data=True, all_tensors_to_one_file=True, location=out.name + "_data")
     print("saved", out)
 

@@ -42,6 +42,10 @@ for (const c of cases) {
   sets += setOk;
   if (!same || !setOk) console.log(same ? "SET " : "FELN", c.text, "\n  got", JSON.stringify(r.feln), "\n  gold", JSON.stringify(c.feln), r.error ?? "");
 }
+for (const q of (process.env.ASK ?? "").split("|").filter(Boolean)) {
+  const r = await page.evaluate((t) => window.feln.ask(t), q);
+  console.log("ASK ", q, "\n  ->", JSON.stringify(r.feln), r.error ?? `${r.count} rows`);
+}
 console.log(`FELN exact ${exact}/${cases.length}, result sets ${sets}/${cases.length}, mean generate ${(ms / cases.length / 1000).toFixed(2)} s`);
 await browser.close();
 process.exit(exact === cases.length && sets === cases.length ? 0 : 1);

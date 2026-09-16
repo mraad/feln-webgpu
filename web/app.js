@@ -13,9 +13,62 @@ env.allowRemoteModels = false;
 env.allowLocalModels = true;
 env.localModelPath = "./"; // must be a relative path: an absolute URL makes transformers.js skip the local lookup
 
+// Browser cache is keyed on the export stamp written by onnx_quantize.py, so new weights under the
+// same file names are fetched, not served from the previous version's cache. Old caches are dropped.
+const version = (await (await fetch("./model/version.txt", { cache: "no-store" })).text()).trim();
+env.cacheKey = `feln-${version}`;
+for (const key of await caches.keys()) if (key !== env.cacheKey) caches.delete(key);
+
+// ---- download progress: one row per file (model weights, tokenizer, data tables) ----
+const MB = (n) => `${(n / 1e6).toFixed(1)} MB`;
+function progressRow(name) {
+  const box = $("progress");
+  let bar = box.querySelector(`progress[data-name="${name}"]`);
+  if (!bar) {
+    box.appendChild(Object.assign(document.createElement("span"), { textContent: name }));
+    bar = box.appendChild(Object.assign(document.createElement("progress"), { max: 1, value: 0 }));
+    bar.dataset.name = name;
+    bar.size = box.appendChild(Object.assign(document.createElement("span"), { textContent: "" }));
+  }
+  const report = (loaded, total) => {
+    bar.value = total ? loaded / total : 0;
+    bar.size.textContent = total ? `${MB(loaded)} / ${MB(total)}` : MB(loaded);
+    bar.dataset.total = total;
+  };
+  report.done = () => {
+    const total = Number(bar.dataset.total) || 0;
+    if (total) report(total, total);
+    else { bar.value = 1; bar.size.textContent = "cached"; } // no progress events: served from the browser cache
+  };
+  return report;
+}
+
+/** fetch() that reports bytes as they stream in. */
+async function fetchBytes(url) {
+  const res = await fetch(url);
+  const total = Number(res.headers.get("content-length")) || 0;
+  const report = progressRow(url.replace(/^\.\//, ""));
+  const chunks = [];
+  let loaded = 0;
+  for (const reader = res.body.getReader(); ; ) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    loaded += value.length;
+    report(loaded, total);
+  }
+  report(loaded, total || loaded);
+  report.done();
+  const out = new Uint8Array(loaded);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return out;
+}
+
 async function loadModel() {
   const device = navigator.gpu ? "webgpu" : "wasm";
   const params = new URLSearchParams(location.search);
+  status(`Loading model on ${device}...`);
   const tokenizer = await AutoTokenizer.from_pretrained("model");
   const model = await AutoModelForCausalLM.from_pretrained("model", {
     device,
@@ -23,7 +76,10 @@ async function loadModel() {
     // accuracy as fp16 at 64% of the size; 4-bit lost ~7 points on 3-layer plans. ?model=model&dtype=fp16 loads the fp16 graph.
     dtype: params.get("dtype") ?? "fp16",
     model_file_name: params.get("model") ?? "model_q8",
-    progress_callback: (p) => p.status === "progress" && status(`Loading model on ${device}: ${p.file} ${Math.round(p.progress)}%`),
+    progress_callback: (p) => {
+      if (p.status === "progress") progressRow(`model/${p.file}`)(p.loaded, p.total);
+      if (p.status === "done") progressRow(`model/${p.file}`).done();
+    },
   });
   return { tokenizer, model, device };
 }
@@ -33,10 +89,7 @@ async function loadDb() {
   const workerUrl = URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`], { type: "text/javascript" }));
   const db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), new Worker(workerUrl));
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-  for (const t of TABLES) {
-    const buf = await (await fetch(`./data/${t}.parquet`)).arrayBuffer();
-    await db.registerFileBuffer(`${t}.parquet`, new Uint8Array(buf));
-  }
+  for (const t of TABLES) await db.registerFileBuffer(`${t}.parquet`, await fetchBytes(`./data/${t}.parquet`));
   const conn = await db.connect();
   for (const sql of loadSql((t) => `${t}.parquet`)) await conn.query(sql);
   return conn;
@@ -113,6 +166,16 @@ async function textToFeln(text) {
   return { raw, feln: JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) };
 }
 
+/** Quoted identifiers in each WHERE that are not columns of that layer. */
+function unknownColumns(feln) {
+  const bad = [];
+  feln.layers.forEach((name, i) => {
+    const cols = new Set((catalog.layers.find((l) => l.name === name)?.columns ?? []).map((c) => c.name.toLowerCase()));
+    for (const [, id] of (feln.where[i] ?? "").matchAll(/"([^"]+)"/g)) if (!cols.has(id.toLowerCase())) bad.push(`${name}.${id}`);
+  });
+  return bad;
+}
+
 /** Full pipeline; also used by test/browser.mjs. */
 async function ask(text) {
   const t0 = performance.now();
@@ -120,6 +183,8 @@ async function ask(text) {
   const genMs = performance.now() - t0;
   let sql;
   try { sql = compile(feln, catalog); } catch (err) { return { feln, raw, genMs, rows: null, error: err.message }; }
+  const bad = unknownColumns(feln);
+  if (bad.length) return { feln, raw, sql, genMs, rows: null, error: `the model used columns that do not exist: ${bad.join(", ")}. Try naming the field as in the catalog (e.g. "water depth").` };
   const missing = feln.layers.filter((l) => !loaded.has(catalog.layers.find((x) => x.name === l)?.table_name || l));
   if (missing.length) return { feln, sql, genMs, rows: null, error: `table not loaded in browser: ${missing.join(", ")}` };
   const layer = catalog.layers.find((x) => x.name === feln.layers[0]);
@@ -160,5 +225,6 @@ $("form").addEventListener("submit", async (e) => {
   catch (err) { status(`Error: ${err.message}`); }
   $("go").disabled = false;
 });
-status(`Ready (${device}). ${TABLES.join(", ")} loaded.`);
+status(`Ready (${device}). ${TABLES.join(", ")} loaded; model ${version}.`);
+$("progress").replaceChildren();
 $("q").disabled = $("go").disabled = false;
