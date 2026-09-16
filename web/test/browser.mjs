@@ -8,9 +8,7 @@ import { chromium } from "playwright";
 const BASE = process.env.BASE ?? "http://127.0.0.1:8765";
 const n = Number(process.argv[2] ?? 20);
 const gold = JSON.parse(readFileSync(new URL("./gold_ids.json", import.meta.url)));
-const val = readFileSync(new URL("../../data/val.jsonl", import.meta.url), "utf8").trim().split("\n").map((l) => JSON.parse(l));
-const textOf = new Map(val.map((r) => [r.completion[0].content, r.prompt[1].content]));
-const cases = gold.map((g) => ({ ...g, text: textOf.get(JSON.stringify(g.feln)) })).filter((c) => c.text).slice(0, n);
+const cases = gold.slice(0, n);
 
 const browser = await chromium.launch({ args: ["--enable-unsafe-webgpu", "--enable-features=Vulkan,SkiaGraphite", "--use-angle=metal", "--ignore-gpu-blocklist"] });
 const page = await browser.newPage();
