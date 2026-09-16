@@ -6,7 +6,8 @@ import { compile } from "./feln_sql.js";
 import { TABLES, loadSql } from "./db.js";
 
 const $ = (id) => document.getElementById(id);
-const status = (t) => ($("status").textContent = t);
+const status = (t, state = "") => { const el = $("status"); el.textContent = t; el.className = state; };
+const loadingMsg = (t) => ($("loading").querySelector(".msg").textContent = t);
 const MAX_ROWS = 200;
 
 env.allowRemoteModels = false;
@@ -22,7 +23,7 @@ for (const key of await caches.keys()) if (key !== env.cacheKey) caches.delete(k
 // ---- download progress: one row per file (model weights, tokenizer, data tables) ----
 const MB = (n) => `${(n / 1e6).toFixed(1)} MB`;
 function progressRow(name) {
-  const box = $("progress");
+  const box = $("loading");
   let bar = box.querySelector(`progress[data-name="${name}"]`);
   if (!bar) {
     box.appendChild(Object.assign(document.createElement("span"), { textContent: name }));
@@ -68,7 +69,7 @@ async function fetchBytes(url) {
 async function loadModel() {
   const device = navigator.gpu ? "webgpu" : "wasm";
   const params = new URLSearchParams(location.search);
-  status(`Loading model on ${device}...`);
+  loadingMsg(`Downloading model (${device}) and data...`);
   const tokenizer = await AutoTokenizer.from_pretrained("model");
   const model = await AutoModelForCausalLM.from_pretrained("model", {
     device,
@@ -95,12 +96,19 @@ async function loadDb() {
   return conn;
 }
 
-const [{ tokenizer, model, device }, conn, catalog, system] = await Promise.all([
-  loadModel(),
-  loadDb(),
-  fetch("./data/Layers.json").then((r) => r.json()),
-  fetch("./data/system_prompt.txt").then((r) => r.text()),
-]);
+let tokenizer, model, device, conn, catalog, system;
+try {
+  [{ tokenizer, model, device }, conn, catalog, system] = await Promise.all([
+    loadModel(),
+    loadDb(),
+    fetch("./data/Layers.json").then((r) => r.json()),
+    fetch("./data/system_prompt.txt").then((r) => r.text()),
+  ]);
+} catch (err) {
+  status("Failed to load", "error");
+  $("loading").appendChild(Object.assign(document.createElement("div"), { className: "err", textContent: `${err.message}\n\nReload the page. If it persists, open the browser console.` }));
+  throw err;
+}
 const loaded = new Set(TABLES);
 
 // ---- map (ArcGIS Maps SDK for JavaScript 5.1, loaded by index.html) ----
@@ -206,7 +214,7 @@ function render({ feln, sql, genMs, count, rows, error }) {
   table.replaceChildren();
   map?.layer.removeAll();
   if (error) { $("rows-h").textContent = error; return; }
-  $("rows-h").textContent = `${count} rows (showing ${rows.length}); model ${(genMs / 1000).toFixed(1)} s`;
+  $("rows-h").textContent = `${count} row${count === 1 ? "" : "s"}${rows.length < count ? ` (showing ${rows.length})` : ""} · model ${(genMs / 1000).toFixed(1)} s`;
   if (!rows.length) return;
   draw(rows);
   const cols = Object.keys(rows[0]).filter((c) => c !== "__geojson");
@@ -220,11 +228,12 @@ function render({ feln, sql, genMs, count, rows, error }) {
 $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   $("go").disabled = true;
-  status("Thinking...");
-  try { render(await ask($("q").value)); status(`Ready (${device}).`); }
-  catch (err) { status(`Error: ${err.message}`); }
+  status("Thinking");
+  try { render(await ask($("q").value)); status(`Ready on ${device}`, "ready"); }
+  catch (err) { status(`Error: ${err.message}`, "error"); }
   $("go").disabled = false;
 });
-status(`Ready (${device}). ${TABLES.join(", ")} loaded; model ${version}.`);
-$("progress").replaceChildren();
+status(`Ready on ${device}`, "ready");
+$("loading-card").remove();
 $("q").disabled = $("go").disabled = false;
+$("q").focus();
