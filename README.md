@@ -5,13 +5,14 @@ English question -> FELN query plan -> DuckDB SQL -> rows on a map, all inside o
 The point of this project: a very lightweight language model **and** a database that both run inside
 the web application itself. No inference server, no database server, no API key: after the page loads
 the model weights (443 MB) and the parquet tables (5.9 MB), every question is answered on the user's
-own machine and nothing leaves the browser. The language model is a fine-tuned
+own machine: inference, SQL and results never leave the browser (the page still fetches the JS
+libraries and basemap tiles from CDNs). The language model is a fine-tuned
 [LFM2-350M](https://huggingface.co/LiquidAI/LFM2-350M) running on WebGPU through transformers.js; the
 database is duckdb-wasm with the spatial extension; the map is the ArcGIS Maps SDK for JavaScript 5.1.
 
 ![North Sea Query: question, FELN plan, DuckDB SQL, rows on the map, all in one tab](docs/screenshot.png)
 
-*"Give me all oil discoveries." answered in 0.2 s on WebGPU: the plan, the SQL, 562 rows on the map.*
+*"Give me all oil discoveries." answered in 0.2 s on WebGPU: the plan, the SQL, 562 matches (200 drawn).*
 
 ```text
 NorthSea.aprx + .gdb ──regen_northsea.py──> Layers.json, okf/, FELN.json (humanized) + validation
@@ -100,7 +101,7 @@ that outrun the schema vocabulary ("a blank content field" -> invented column `c
 source other than Department of Energy & Climate Change" -> label instead of the stored code `DECC`;
 "pipelines of type Unknown whose to facility is 'KOLLSNES' or 'TEESSIDE'" -> OR grouping), plus two
 three-layer questions. The 350M alone also misses "Unknown pipelines outside Denmark" (`=` for `<>`).
-The 1.2B gains 0.5 points for a ~1.5 GB 8-bit download and about three times the WebGPU cost per
+The 1.2B gains 0.4 percentage points of exact-plan accuracy (0.005 Jaccard) for a ~1.5 GB 8-bit download and about three times the WebGPU cost per
 token, so the 350M stays in the app.
 
 ## Export to the browser
