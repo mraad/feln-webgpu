@@ -143,11 +143,23 @@ npm test                 # feln_sql.js == Python compiler on all 1000 plans (`uv
 npm run serve            # http://127.0.0.1:8765 (or: python3 -m http.server 8781 --bind 127.0.0.1 -d web)
 BASE=http://127.0.0.1:8781 SCREENSHOT=../docs/screenshot.png node test/browser.mjs 1   # refresh docs/screenshot.png
 npm run test:browser     # Playwright + headless Chromium with WebGPU, end to end on the val questions
+node test/config.mjs    # configuration and download-popup smoke test with mocked downloads
 ```
 
-`app.js` loads `model/` (8-bit, 443 MB; `?model=model&dtype=fp16` for fp16) and the three parquet
-tables, with a progress row per downloaded file; the loading card is removed when ready and shows the
-error if a download fails. The browser cache is keyed on `model/version.txt`, written by
+Edit `web/config.js` to set the application `title` (page heading and browser tab), `modelUrl`
+(model directory), `dataUrl` (catalog, system prompt and Parquet directory), and optional
+`databaseUrl` (a prebuilt DuckDB file instead of Parquet). Paths are relative to the page, or may be
+absolute HTTP(S) URLs; remote servers must allow CORS. Directory paths may omit the trailing slash.
+The model directory must include `version.txt`, tokenizer/config files, and `onnx/`. A prebuilt
+database must be compatible with DuckDB-wasm and contain the `Wells`, `Discoveries`, and `Pipelines`
+tables with native spatial `geometry` columns matching the catalog. It is downloaded in full and
+opened read-only; `dataUrl` still supplies `Layers.json` and `system_prompt.txt`.
+
+`app.js` defaults to `model/` (8-bit, 443 MB; `?model=model&dtype=fp16` for fp16) and the three parquet
+tables, with a progress row per downloaded file in a modal popup that closes once the database and
+model warmup are complete and the prompt field is enabled,
+and stays open with the error if a download fails. The browser cache is keyed on the model URL and
+`model/version.txt`, written by
 `onnx_quantize.py`, so a re-export is never served from the previous version's cache (this bit once:
 the page kept the v1 weights). Per question: chat template -> greedy generate -> JSON -> column names
 checked against the catalog -> `feln_sql.js` -> `SELECT ... WHERE OBJECTID IN (plan)` -> table +
@@ -173,10 +185,8 @@ Known limits:
   `out/<name>` back and run the export steps here.
 - Geometry is WGS84 degrees and `ST_DWithin` is fed metres, exactly as the Python `FELNToDuckDB`
   does; result sets match Python, but distances are not geodesic. Fix in `feln` first, then here.
-- transformers.js needs `env.localModelPath` to be a relative path; an absolute URL silently skips
-  the local lookup.
 - CDN dependencies: `@huggingface/transformers`, `@duckdb/duckdb-wasm` (+ the spatial extension from
-  extensions.duckdb.org), `js.arcgis.com/5.1`. Model and data are served locally.
+  extensions.duckdb.org), `js.arcgis.com/5.1`. Model and data locations are set in `web/config.js`.
 
 ## License
 
