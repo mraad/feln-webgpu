@@ -3,42 +3,76 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>North Sea FELN</title>
-<link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/light/main.css">
+<title>North Sea Query</title>
+<link rel="stylesheet" href="https://js.arcgis.com/5.1/esri/themes/dark/main.css">
 <script type="module" src="https://js.arcgis.com/5.1/"></script>
 <style>
-  :root { --bg: #fff; --fg: #1a1a1a; --muted: #666; --line: #ddd; --accent: #0b5cad; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #111; --fg: #eee; --muted: #999; --line: #333; --accent: #6db3f2; } }
-  body { margin: 0; padding: 16px; font: 15px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--fg); max-width: 1100px; margin-inline: auto; }
-  h1 { font-size: 1.3rem; margin: 0 0 8px; }
-  #status { color: var(--muted); min-height: 1.4em; }
-  form { display: flex; gap: 8px; margin: 12px 0; }
-  input { flex: 1; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
-  button { font: inherit; padding: 8px 14px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; }
-  button:disabled { opacity: .5; }
-  pre { background: color-mix(in srgb, var(--fg) 6%, var(--bg)); padding: 10px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; margin: 6px 0 12px; }
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --fg: #1c1f26; --muted: #6b7280; --line: #e3e6eb;
+    --accent: #2563eb; --accent-fg: #fff; --code-bg: #f0f2f5; --ok: #15803d; --err: #b91c1c;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1115; --card: #171a21; --fg: #e6e8ee; --muted: #9aa3b2; --line: #262b35;
+      --accent: #5b8def; --code-bg: #10131a; --ok: #4ade80; --err: #f87171; --shadow: 0 1px 2px rgba(0,0,0,.5); }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; }
+  header { display: flex; align-items: baseline; gap: 14px; padding: 18px 20px 10px; flex-wrap: wrap; }
+  header h1 { font-size: 1.25rem; font-weight: 650; margin: 0; letter-spacing: -.01em; }
+  header p { margin: 0; color: var(--muted); }
+  #status { margin-left: auto; font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+  #status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  #status.ready::before { background: var(--ok); }
+  #status.error::before { background: var(--err); }
+  main { padding: 0 20px 24px; display: grid; gap: 14px; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 14px 16px; min-width: 0; }
+  .card h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  .span { grid-column: 1 / -1; }
+  form { display: flex; gap: 8px; }
+  input { flex: 1; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button { font: inherit; font-weight: 600; padding: 10px 18px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-fg); cursor: pointer; }
+  button:disabled { opacity: .45; cursor: default; }
+  #loading { display: grid; grid-template-columns: max-content 1fr max-content; gap: 6px 12px; align-items: center; font-size: 13px; color: var(--muted); }
+  #loading progress { width: 100%; height: 6px; accent-color: var(--accent); }
+  #loading .msg { grid-column: 1 / -1; color: var(--fg); }
+  #loading .err { grid-column: 1 / -1; color: var(--err); white-space: pre-wrap; }
+  .card:has(> arcgis-map) { display: flex; }
+  arcgis-map { display: block; flex: 1; min-height: 520px; border-radius: 8px; overflow: hidden; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 0; overflow-x: auto; white-space: pre-wrap; font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 2.2em; }
+  .side { display: grid; gap: 14px; align-content: start; }
+  .wrap { overflow: auto; max-height: 440px; border: 1px solid var(--line); border-radius: 8px; }
+  .wrap:empty, .wrap:has(table:empty) { display: none; }
   table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; white-space: nowrap; }
-  .wrap { overflow-x: auto; }
-  h2 { font-size: 1rem; margin: 10px 0 2px; color: var(--muted); }
-  #progress { display: grid; grid-template-columns: max-content 1fr max-content; gap: 4px 10px; align-items: center; font-size: 13px; color: var(--muted); margin: 6px 0; }
-  #progress:empty { display: none; }
-  #progress progress { width: 100%; height: 8px; }
-  arcgis-map { display: block; height: 420px; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0 12px; }
+  th { position: sticky; top: 0; background: var(--card); text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; white-space: nowrap; }
+  tbody tr:hover { background: var(--code-bg); }
+  .meta { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } arcgis-map { height: 360px; } header { padding-inline: 16px; } main { padding-inline: 16px; } }
 </style>
 </head>
 <body>
-<h1>North Sea: ask in English, run in DuckDB. All in this tab.</h1>
-<div id="status">Loading...</div>
-<div id="progress"></div>
-<form id="form">
-  <input id="q" placeholder="e.g. Show gas pipelines within 5 kilometers of dry wells" autocomplete="off" disabled>
-  <button id="go" disabled>Ask</button>
-</form>
-<arcgis-map id="map" basemap="dark-gray-vector" center="3, 60" zoom="5"><arcgis-zoom slot="top-left"></arcgis-zoom></arcgis-map>
-<h2>FELN</h2><pre id="feln"></pre>
-<h2>SQL</h2><pre id="sql"></pre>
-<h2 id="rows-h">Rows</h2><div class="wrap"><table id="rows"></table></div>
+<header>
+  <h1>North Sea Query</h1>
+  <p>Ask in English. A 350M model, DuckDB and the map all run in this tab.</p>
+  <span id="status">Loading</span>
+</header>
+<main>
+  <section class="card span" id="loading-card"><h2>Loading</h2><div id="loading"><span class="msg">Starting...</span></div></section>
+  <section class="card span">
+    <form id="form">
+      <input id="q" placeholder="e.g. Show gas pipelines within 5 kilometers of dry wells" autocomplete="off" disabled>
+      <button id="go" disabled>Ask</button>
+    </form>
+  </section>
+  <section class="card"><arcgis-map id="map" basemap="dark-gray-vector" center="3, 60" zoom="5"><arcgis-zoom slot="top-left"></arcgis-zoom></arcgis-map></section>
+  <div class="side">
+    <section class="card"><h2>Query plan (FELN)</h2><pre id="feln"></pre></section>
+    <section class="card"><h2>DuckDB SQL</h2><pre id="sql"></pre></section>
+  </div>
+  <section class="card span"><h2>Results</h2><p class="meta" id="rows-h">Ask a question to see rows here.</p><div class="wrap"><table id="rows"></table></div></section>
+</main>
 <script type="module" src="./app.js"></script>
 </body>
 </html>
