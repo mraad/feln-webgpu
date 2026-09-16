@@ -177,3 +177,10 @@ Known limits:
   the local lookup.
 - CDN dependencies: `@huggingface/transformers`, `@duckdb/duckdb-wasm` (+ the spatial extension from
   extensions.duckdb.org), `js.arcgis.com/5.1`. Model and data are served locally.
+
+## License
+
+Apache-2.0 (see `LICENSE`). Model weights are not in the repository; `web/model/*.json` come from
+[onnx-community/LFM2-350M-ONNX](https://huggingface.co/onnx-community/LFM2-350M-ONNX) and the fine-tuned
+weights inherit LFM2's own license. The NorthSea tables are public regulator data (Sodir/NPD, OGA,
+GEUS, NLOG).
