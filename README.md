@@ -14,6 +14,13 @@ database is duckdb-wasm with the spatial extension; the map is the ArcGIS Maps S
 
 *"Give me all oil discoveries." answered in 0.2 s on WebGPU: the plan, the SQL, 562 matches (200 drawn).*
 
+## A big thank you to Geodata
+
+**A BIG thank you to [Geodata SA](https://www.geodata.no/) for the NorthSea data.** The `NorthSea.aprx`
+project, its geodatabase and everything derived from it here (`Layers.json`, `okf/`, `FELN.json`, the
+parquet tables and `NorthSea.ddb`) exist because Geodata made that dataset available. None of this
+demo would run without it.
+
 ```text
 NorthSea.aprx + .gdb ──regen_northsea.py──> Layers.json, okf/, FELN.json (humanized) + validation
                                     │
@@ -193,4 +200,4 @@ Known limits:
 Apache-2.0 (see `LICENSE`). Model weights are not in the repository; `web/model/*.json` come from
 [onnx-community/LFM2-350M-ONNX](https://huggingface.co/onnx-community/LFM2-350M-ONNX) and the fine-tuned
 weights inherit LFM2's own license. The NorthSea tables are public regulator data (Sodir/NPD, OGA,
-GEUS, NLOG).
+GEUS, NLOG), compiled and provided by [Geodata SA](https://www.geodata.no/); thank you.
