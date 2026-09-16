@@ -1,0 +1,41 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 9186.46it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+  0/175
+  20/175
+  40/175
+  60/175
+  80/175
+  100/175
+  120/175
+  140/175
+  160/175
+
+=== val.jsonl n=175 /Users/user/GWorkspace/feln-webgpu/out/lfm2-350m-feln-v3 ===
+  valid      175/175
+  exact      168/175  96.0%
+  structural 0.995
+  sql_ok     175/175
+  exec       161  jaccard 0.975
+--- MISS ---
+{"q": "Show discoveries where (discovery wellbore name contains '211/13-') and (discovery hydrocarbon type is blank). The returned discoveries must be more than 10 kilometers from all matching wells with core samples.", "pred": {"layers": ["Discoveries", "Wells"], "where": ["\"discovery_hc_type\" = '' AND \"discovery_wellbore_name\" ILIKE '%211/13-%'", "\"core_sample\" = 1"], "relations": ["notWithinDistance 10 kilometers"]}, "gold": {"layers": ["Discoveries", "Wells"], "where": ["\"discovery_hc_type\" = '' AND \"discovery_wellbore_name\" ILIKE '%211/13-%'", "\"core_sample\" = 'YES'"], "relati
+--- MISS ---
+{"q": "Show discoveries where (discovery wellbore name contains '211/13-') and (discovery hydrocarbon type is blank). The returned discoveries must be more than 10 kilometers from all matching wells with core samples.", "sql_error": "Conversion Error: Could not convert string 'YES' to INT32\n\nLINE 1: ...(SELECT OBJECTID, geometry FROM Wells WHERE (core_sample = 1)), J0 AS (SELECT A.OBJECTID FROM L0 AS A WHERE (NOT EXISTS...\n       ", "pred": {"layers": ["Discoveries", "Wells"], "where": ["\"discovery_hc_type\" = '' AND \"discovery_wellbore_name\" ILIKE '%211/13-%'", "\"core_sample\" = 1"], "
+--- MISS ---
+{"q": "Find oil discoveries where discovery wellbore name contains '110/15-'. The returned discoveries must contain one or more wells with core samples.", "pred": {"layers": ["Discoveries", "Wells"], "where": ["\"discovery_type\" = 3 AND \"discovery_wellbore_name\" ILIKE '%110/15-%'", "\"core_sample\" = 1"], "relations": ["contains"]}, "gold": {"layers": ["Discoveries", "Wells"], "where": ["\"discovery_type\" = 3 AND \"discovery_wellbore_name\" ILIKE '%110/15-%'", "\"core_sample\" = 'YES'"], "relations": ["contains"]}}
+--- MISS ---
+{"q": "Find all discoveries where discovery type is Oil. The returned discoveries must be within 50.5 kilometers of wells classified as 'oil/gas/condensate'. The returned discoveries must intersect one or more pipelines.", "pred": {"layers": ["Discoveries", "Wells", "Pipelines"], "where": ["\"discovery_type\" = 4", "\"content_type\" = 13", ""], "relations": ["withinDistance 50.5 kilometers", "intersects"]}, "gold": {"layers": ["Discoveries", "Wells", "Pipelines"], "where": ["\"discovery_type\" = 3", "\"content_type\" = 13", ""], "relations": ["withinDistance 50.5 kilometers", "intersects"]}}
+--- MISS ---
+{"q": "Find all wells where either (source is Department of Energy & Climate Change) or (the feature is not discovery wellbores). The returned wells must lie within one or more oil discoveries. The returned wells must be within 15.5 kilometers of unknown pipelines.", "pred": {"layers": ["Wells", "Discoveries", "Pipelines"], "where": ["\"discovery_wellbore_name\" = 'DECC' OR \"source\" = 'DECC'", "\"discovery_type\" = -1", "\"pipelinestype\" = 0"], "relations": ["within", "withinDistance 15.5 kilometers"]}, "gold": {"layers": ["Wells", "Discoveries", "Pipelines"], "where": ["\"discovery_wellbor
+--- MISS ---
+{"q": "Find all wells where either (source is Department of Energy & Climate Change) or (the feature is not discovery wellbores). The returned wells must lie within one or more oil discoveries. The returned wells must be within 15.5 kilometers of unknown pipelines.", "sql_error": "Binder Error: Referenced column \"discovery_wellbore_name\" not found in FROM clause!\nCandidate bindings: \"discovery_wellbore\", \"wellbore_name\", \"doc_by_licensee\", \"wellbore_id\", \"wellbore_history\"", "pred": {"layers": ["Wells", "Discoveries", "Pipelines"], "where": ["\"discovery_wellbore_name\" = 'DECC' O
+--- MISS ---
+{"q": "List discoveries where (field label is 'VIGDIS') and (field name is either 'JOHAN CASTBERG' or 'MUNIN'). The returned discoveries must intersect one or more condensate pipelines.", "pred": {"layers": ["Discoveries", "Pipelines"], "where": ["\"field_name\" = 'VIGDIS' OR (\"field_name\" = 'JOHAN CASTBERG' OR \"field_name\" = 'MUNIN')", "\"pipelinestype\" = 1"], "relations": ["intersects"]}, "gold": {"layers": ["Discoveries", "Pipelines"], "where": ["\"field_label\" = 'VIGDIS' AND (\"field_name\" = 'JOHAN CASTBERG' OR \"field_name\" = 'MUNIN')", "\"pipelinestype\" = 1"], "relations": ["int
+--- MISS ---
+{"q": "List all pipelines where country is not United Kingdom. The returned pipelines must be within 3.5 kilometers of wells classified as 'oil/gas'. The returned pipelines must intersect one or more unknown discoveries where discovery current activity status is 'PRODUCING'.", "pred": {"layers": ["Pipelines", "Wells", "Discoveries"], "where": ["\"country\" <> 'UK'", "\"content_type\" = 5", "\"discovery_current_activity_sta\" = 'PRODUCING' AND \"discovery_current_activity_phase\" = 'PRODUCING'"], "relations": ["withinDistance 3.5 kilometers", "intersects"]}, "gold": {"layers": ["Pipelines", "We
+--- MISS ---
+{"q": "List all pipelines where country is not United Kingdom. The returned pipelines must be within 3.5 kilometers of wells classified as 'oil/gas'. The returned pipelines must intersect one or more unknown discoveries where discovery current activity status is 'PRODUCING'.", "sql_error": "Binder Error: Referenced column \"discovery_current_activity_phase\" not found in FROM clause!\nCandidate bindings: \"discovery_current_activity_sta\", \"discovery_hc_type\", \"discovery_type\", \"discovery_id\"", "pred": {"layers": ["Pipelines", "Wells", "Discoveries"], "where": ["\"country\" <> 'UK'", "\"
+--- MISS ---
+{"q": "Show me pipelines where (medium ends with 'Oil') and (current operator is 'VÅR ENERGI ASA'). The returned pipelines must be within 50 kilometers of oil discoveries.", "pred": {"layers": ["Pipelines", "Discoveries"], "where": ["\"medium\" ILIKE '%Oil' AND \"current_operator\" = 'VÅR ENERGI ASA'", "\"discovery_type\" = 3"], "relations": ["withinDistance 50 kilometers"]}, "gold": {"layers": ["Pipelines", "Discoveries"], "where": ["\"current_operator\" = 'VÅR ENERGI ASA' AND \"medium\" ILIKE '%Oil'", "\"discovery_type\" = 3"], "relations": ["withinDistance 50 kilometers"]}}
+(10 misses total)

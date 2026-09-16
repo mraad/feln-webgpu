@@ -8,6 +8,7 @@ model to spell columns right.
 
 import json
 import random
+import re
 from pathlib import Path
 
 SRC = Path.home() / "Documents/ArcGIS/Projects/NorthSea"
@@ -58,11 +59,74 @@ def depth_rows(rng: random.Random, n: int) -> list[dict]:
     return out
 
 
+# The grammar states every spatial constraint as its own sentence ("The returned wells must be
+# within 4 miles of ...") and names pipeline phase as "where current phase is 'IN SERVICE'". Users
+# write "and are within 4 miles of an in-service pipeline"; the model then folded the constraint
+# into the first layer's WHERE. These rewrites keep the plan and change only the wording.
+CONSTRAINT_RE = re.compile(r"\. The returned \w+ must (be |)")
+PHASES = {"IN SERVICE": "in-service", "DECOMMISSIONED": "decommissioned", "ABANDONED IN PLACE": "abandoned"}
+PHASE_RE = re.compile(r"pipelines where current phase is '(IN SERVICE|DECOMMISSIONED|ABANDONED IN PLACE)'")
+
+
+def conjoin(text: str, rng: random.Random) -> str | None:
+    """'Show A. The returned wells must be within X of B.' -> 'Show A that are within X of B.'
+
+    The first constraint joins with "that", later ones with "and": "wells that are within 4 miles of
+    pipelines and contain one or more ...". "must be" -> "are"; other verbs keep their form.
+    """
+    if not CONSTRAINT_RE.search(text):
+        return None
+    n = 0
+
+    def repl(m: re.Match) -> str:
+        nonlocal n
+        n += 1
+        word = "that" if n == 1 else "and"
+        return f" {word} are " if m.group(1) else f" {word} "
+
+    return CONSTRAINT_RE.sub(repl, text)
+
+
+def phase_adjective(text: str) -> str | None:
+    """"pipelines where current phase is 'IN SERVICE'" -> 'in-service pipelines'."""
+    if not PHASE_RE.search(text):
+        return None
+    return PHASE_RE.sub(lambda m: f"{PHASES[m.group(1)]} pipelines", text)
+
+
+PHASE_TEMPLATES = ["Show {adj} pipelines", "List all {adj} pipelines", "Find the {adj} pipelines", "Which pipelines are {adj}?"]
+
+
+def phase_rows() -> list[dict]:
+    return [
+        {"text": t.format(adj=adj), "meta": {"layers": ["Pipelines"], "where": [f'"current_phase" = \'{code}\''], "relations": []}}
+        for code, adj in PHASES.items()
+        for t in PHASE_TEMPLATES
+    ]
+
+
+def paraphrases(samples: list[dict], rng: random.Random) -> list[dict]:
+    out = []
+    for s in samples:
+        variants = [s["text"]]
+        for fn in (lambda t: phase_adjective(t), lambda t: conjoin(t, rng)):
+            for v in list(variants):
+                new = fn(v)
+                if new and new not in variants:
+                    variants.append(new)
+        # Every phase rewrite is kept (28 rows); conjoined constraints for 40% of multi-layer rows.
+        for v in variants[1:]:
+            if "current phase" not in s["text"] and rng.random() > 0.4:
+                continue
+            out.append({"text": v, "meta": s["meta"]})
+    return out
+
+
 def main() -> None:
     layers = json.loads((SRC / "Layers.json").read_text())["layers"]
     samples = json.loads((SRC / "FELN.json").read_text())
     n_source = len(samples)
-    samples += depth_rows(random.Random(1), 45)
+    samples += depth_rows(random.Random(1), 45) + phase_rows() + paraphrases(samples[:n_source], random.Random(2))
     system = system_prompt(layers)
     (OUT / "system_prompt.txt").write_text(system)
 

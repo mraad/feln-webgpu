@@ -51,7 +51,9 @@ Holdout, greedy decoding (3 epochs, lr 5e-5, full fine-tune):
 |---|---|---|---|---|---|---|
 | LFM2-350M untuned | 99 | 0/99 | 0 | 0 | 0 | - |
 | v1, source rows only | 99 | 99/99 | 92/99 (92.9%) | 0.993 | 99/99 | 0.965 (85) |
-| v2, + depth paraphrases (`out/lfm2-350m-feln-v2`, shipped) | 108 | 108/108 | 103/108 (95.4%) | 0.996 | 108/108 | 0.989 (94) |
+| v2, + depth paraphrases | 108 | 108/108 | 103/108 (95.4%) | 0.996 | 108/108 | 0.989 (94) |
+| v3, + conjoined constraints and phase adjectives, M4 Max (11 min) | 175 | 175/175 | 168/175 (96.0%) | 0.995 | 175/175 | 0.975 (161) |
+| v3, same data on an RTX PRO 6000 (36 s), shipped as `out/lfm2-350m-feln-v3-rtx` | 175 | 175/175 | 169/175 (96.6%) | 0.995 | 175/175 | 0.983 (161) |
 
 Remaining misses are code-table confusions (`discovery_type` Oil = 3 vs 4) and the `core_sample`
 column, which is text `'YES'` where every sibling flag is an integer.
@@ -77,7 +79,8 @@ Quantization sweep on v1 (81 questions), then v2 with the chosen format (90 ques
 | v1 | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 74/81 | 77/81 | 0.41 s |
 | v1 | q4f16, block 32 symmetric | MatMulNBits 4-bit | 298 MB | 68/81 | 72/81 | 0.23 s |
 | v1 | q4f16, block 32 / 128 asymmetric | MatMulNBits 4-bit | 300-317 MB | 71/81 | 74-75/81 | 0.25-0.40 s |
-| v2 (shipped) | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 85/90 | 89/90 | 0.40 s |
+| v2 | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 85/90 | 89/90 | 0.40 s |
+| v3 RTX (shipped) | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 155/161 | 157/161 | 0.40 s |
 
 `onnx.save` appends to an existing external-data file; both export scripts unlink it first.
 
@@ -102,9 +105,13 @@ question: chat template -> greedy generate -> JSON -> `feln_sql.js` -> `SELECT .
 
 Known limits:
 
-- Phrasing outside the generator grammar can still misfire: "wells deeper than 500 meters and within 5
-  kilometers of gas pipelines" folds the pipeline filter into the wells WHERE; the grammar says "The
-  returned wells must be within 5 kilometers of gas pipelines". The page reports the invalid plan.
+- v3 data adds three paraphrase families on top of FELN.json: water-depth wording, "in-service /
+  decommissioned / abandoned pipelines" for `current_phase`, and constraints joined into one sentence
+  ("wells that are within 4 miles of ... and contain ..."). Other wording outside the grammar can still
+  misfire; the page reports an invalid plan instead of running it.
+- Training elsewhere: `train.py --no-tui` on a CUDA box with the same `data/*.jsonl` and pinned
+  `transformers`/`trl` gives an equivalent checkpoint (RTX PRO 6000: 36 s for the full run); copy
+  `out/<name>` back and run the export steps here.
 - Geometry is WGS84 degrees and `ST_DWithin` is fed metres, exactly as the Python `FELNToDuckDB`
   does; result sets match Python, but distances are not geodesic. Fix in `feln` first, then here.
 - transformers.js needs `env.localModelPath` to be a relative path; an absolute URL silently skips
