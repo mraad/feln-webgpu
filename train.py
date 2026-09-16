@@ -22,7 +22,7 @@ from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import SFTConfig, SFTTrainer
 
-BASE = "LiquidAI/LFM2-350M"
+BASE = "LiquidAI/LFM2-350M"  # default; --base LiquidAI/LFM2.5-1.2B-Instruct for the feln-liquid model
 
 
 class StatusFiles(TrainerCallback):
@@ -63,16 +63,18 @@ def open_watcher(out: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out/lfm2-350m-feln")
+    ap.add_argument("--base", default=BASE)
     ap.add_argument("--epochs", type=float, default=3)
     ap.add_argument("--lr", type=float, default=5e-5)
     ap.add_argument("--batch", type=int, default=8)
+    ap.add_argument("--max-length", type=int, default=768, help="tokens per row; 12288 for the OKF system prompt")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--no-tui", action="store_true", help="do not open the watch.py Terminal window")
     args = ap.parse_args()
 
-    tok = AutoTokenizer.from_pretrained(BASE)
+    tok = AutoTokenizer.from_pretrained(args.base)
     ds = load_dataset("json", data_files={"train": "data/train.jsonl", "val": "data/val.jsonl"})
-    model = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.bfloat16)
+    model = AutoModelForCausalLM.from_pretrained(args.base, dtype=torch.bfloat16)
 
     cfg = SFTConfig(
         output_dir=args.out,
@@ -83,7 +85,7 @@ def main() -> None:
         lr_scheduler_type="cosine",
         warmup_steps=20,
         weight_decay=0.0,
-        max_length=768,
+        max_length=args.max_length,
         completion_only_loss=True,
         bf16=True,
         logging_steps=10,

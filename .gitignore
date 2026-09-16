@@ -4,3 +4,8 @@ scratch/
 web/node_modules/
 web/model/onnx/
 __pycache__/
+# derived by prepare_data.py; 68 MB with the OKF prompt
+data/train.jsonl
+data/val.jsonl
+data/preds_*.jsonl
+data/*.log

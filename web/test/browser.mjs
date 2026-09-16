@@ -14,7 +14,7 @@ const browser = await chromium.launch({ args: ["--enable-unsafe-webgpu", "--enab
 const page = await browser.newPage();
 page.on("console", (m) => m.type() === "error" && console.log("console:", m.text()));
 page.on("pageerror", (e) => console.log("pageerror:", e.message));
-const query = new URLSearchParams(Object.fromEntries(["model", "dtype"].filter((k) => process.env[k.toUpperCase()]).map((k) => [k, process.env[k.toUpperCase()]])));
+const query = new URLSearchParams(Object.fromEntries(["model", "dtype", "prefix"].filter((k) => process.env[k.toUpperCase()]).map((k) => [k, process.env[k.toUpperCase()]])));
 await page.goto(`${BASE}/index.html?${query}`);
 await page.waitForFunction(() => window.feln?.ask, null, { timeout: 600_000 });
 console.log("page ready:", await page.textContent("#status"));
@@ -42,7 +42,7 @@ for (const c of cases) {
 }
 for (const q of (process.env.ASK ?? "").split("|").filter(Boolean)) {
   const r = await page.evaluate((t) => window.feln.ask(t), q);
-  console.log("ASK ", q, "\n  ->", JSON.stringify(r.feln), r.error ?? `${r.count} rows`);
+  console.log("ASK ", q, "\n  ->", JSON.stringify(r.feln), r.error ?? `${r.count} rows`, `(${(r.genMs / 1000).toFixed(2)} s)`);
 }
 console.log(`FELN exact ${exact}/${cases.length}, result sets ${sets}/${cases.length}, mean generate ${(ms / cases.length / 1000).toFixed(2)} s`);
 await browser.close();
