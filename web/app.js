@@ -4,31 +4,39 @@ import { AutoTokenizer, AutoModelForCausalLM, DynamicCache, Tensor, env } from "
 import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.33.1-dev57.0/+esm";
 import { compile } from "./feln_sql.js";
 import { TABLES, loadSql } from "./db.js";
+import config from "./config.js";
 
 const $ = (id) => document.getElementById(id);
 const status = (t, state = "") => { const el = $("status"); el.textContent = t; el.className = state; };
 const loadingMsg = (t) => ($("loading").querySelector(".msg").textContent = t);
 const MAX_ROWS = 200;
 
-env.allowRemoteModels = false;
-env.allowLocalModels = true;
-env.localModelPath = "./"; // must be a relative path: an absolute URL makes transformers.js skip the local lookup
+document.title = $("app-title").textContent = config.title;
+const directoryUrl = (path) => new URL(path.endsWith("/") ? path : `${path}/`, document.baseURI).href;
+const modelUrl = directoryUrl(config.modelUrl);
+const dataUrl = directoryUrl(config.dataUrl);
+// Use the configured host directly, including same-origin URLs, without a Hugging Face fallback.
+env.allowRemoteModels = true;
+env.allowLocalModels = false;
+env.remoteHost = modelUrl;
+env.remotePathTemplate = "";
 
-// Browser cache is keyed on the export stamp written by onnx_quantize.py, so new weights under the
-// same file names are fetched, not served from the previous version's cache. Old caches are dropped.
-const version = (await (await fetch("./model/version.txt", { cache: "no-store" })).text()).trim();
-env.cacheKey = `feln-${version}`;
-for (const key of await caches.keys()) if (key !== env.cacheKey) caches.delete(key);
+async function fetchResource(url, options) {
+  const response = await fetch(url, options);
+  if (!response.ok) throw new Error(`Failed to download ${url}: HTTP ${response.status}`);
+  return response;
+}
 
 // ---- download progress: one row per file (model weights, tokenizer, data tables) ----
 const MB = (n) => `${(n / 1e6).toFixed(1)} MB`;
 function progressRow(name) {
   const box = $("loading");
-  let bar = box.querySelector(`progress[data-name="${name}"]`);
+  let bar = box.querySelector(`progress[data-name="${CSS.escape(name)}"]`);
   if (!bar) {
     box.appendChild(Object.assign(document.createElement("span"), { textContent: name }));
     bar = box.appendChild(Object.assign(document.createElement("progress"), { max: 1, value: 0 }));
     bar.dataset.name = name;
+    bar.setAttribute("aria-label", name);
     bar.size = box.appendChild(Object.assign(document.createElement("span"), { textContent: "" }));
   }
   const report = (loaded, total) => {
@@ -46,7 +54,7 @@ function progressRow(name) {
 
 /** fetch() that reports bytes as they stream in. */
 async function fetchBytes(url) {
-  const res = await fetch(url);
+  const res = await fetchResource(url);
   const total = Number(res.headers.get("content-length")) || 0;
   const report = progressRow(url.replace(/^\.\//, ""));
   const chunks = [];
@@ -90,25 +98,38 @@ async function loadDb() {
   const workerUrl = URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`], { type: "text/javascript" }));
   const db = new duckdb.AsyncDuckDB(new duckdb.VoidLogger(), new Worker(workerUrl));
   await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-  for (const t of TABLES) await db.registerFileBuffer(`${t}.parquet`, await fetchBytes(`./data/${t}.parquet`));
+  if (config.databaseUrl) {
+    await db.registerFileBuffer("database.duckdb", await fetchBytes(config.databaseUrl));
+    await db.open({ path: "database.duckdb", accessMode: duckdb.DuckDBAccessMode.READ_ONLY });
+  } else {
+    for (const t of TABLES) await db.registerFileBuffer(`${t}.parquet`, await fetchBytes(`${dataUrl}${t}.parquet`));
+  }
   const conn = await db.connect();
-  for (const sql of loadSql((t) => `${t}.parquet`)) await conn.query(sql);
+  const statements = config.databaseUrl ? ["INSTALL spatial", "LOAD spatial"] : loadSql((t) => `${t}.parquet`);
+  for (const sql of statements) await conn.query(sql);
   return conn;
 }
 
 let tokenizer, model, device, conn, catalog, system;
 try {
+  // Scope model caches to their location and export stamp; leave other applications' caches intact.
+  const version = (await (await fetchResource(`${modelUrl}version.txt`, { cache: "no-store" })).text()).trim();
+  const cachePrefix = `feln-${encodeURIComponent(modelUrl)}-`;
+  env.cacheKey = `${cachePrefix}${version}`;
+  for (const key of await caches.keys()) if (key.startsWith(cachePrefix) && key !== env.cacheKey) await caches.delete(key);
   [{ tokenizer, model, device }, conn, catalog, system] = await Promise.all([
     loadModel(),
     loadDb(),
-    fetch("./data/Layers.json").then((r) => r.json()),
-    fetch("./data/system_prompt.txt").then((r) => r.text()),
+    fetchResource(`${dataUrl}Layers.json`).then((r) => r.json()),
+    fetchResource(`${dataUrl}system_prompt.txt`).then((r) => r.text()),
   ]);
 } catch (err) {
   status("Failed to load", "error");
-  $("loading").appendChild(Object.assign(document.createElement("div"), { className: "err", textContent: `${err.message}\n\nReload the page. If it persists, open the browser console.` }));
+  $("loading").appendChild(Object.assign(document.createElement("div"), { className: "err", role: "alert", textContent: `${err.message}\n\nReload the page. If it persists, open the browser console.` }));
   throw err;
 }
+status("Initializing");
+loadingMsg("Downloads complete. Preparing the application...");
 const loaded = new Set(TABLES);
 
 // ---- map (ArcGIS Maps SDK for JavaScript 5.1, loaded by index.html) ----
@@ -189,7 +210,15 @@ async function buildPrefixCache() {
   return { ids, entries, tokens: n };
 }
 
-const prefix = new URLSearchParams(location.search).get("prefix") === "0" ? null : await buildPrefixCache();
+loadingMsg("Preparing the model for your first prompt...");
+let prefix;
+try {
+  prefix = new URLSearchParams(location.search).get("prefix") === "0" ? null : await buildPrefixCache();
+} catch (err) {
+  status("Failed to initialize", "error");
+  loadingMsg(`Unable to prepare the model: ${err.message}. Reload the page to try again.`);
+  throw err;
+}
 
 async function textToFeln(text) {
   const inputs = promptFor(text);
@@ -265,6 +294,6 @@ $("form").addEventListener("submit", async (e) => {
   $("go").disabled = false;
 });
 status(`Ready on ${device}${prefix ? ` (${prefix.tokens}-token prompt prefix cached)` : ""}`, "ready");
-$("loading-card").remove();
 $("q").disabled = $("go").disabled = false;
+$("loading-card").close();
 $("q").focus();
