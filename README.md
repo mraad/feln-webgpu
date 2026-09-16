@@ -1,9 +1,17 @@
 # feln-webgpu
 
 English question -> FELN query plan -> DuckDB SQL -> rows on a map, all inside one browser tab.
-The language model is a fine-tuned [LFM2-350M](https://huggingface.co/LiquidAI/LFM2-350M) running on
-WebGPU through transformers.js; the database is duckdb-wasm with the spatial extension; the map is the
-ArcGIS Maps SDK for JavaScript 5.1.
+
+The point of this project: a very lightweight language model **and** a database that both run inside
+the web application itself. No inference server, no database server, no API key: after the page loads
+the model weights (443 MB) and the parquet tables (5.9 MB), every question is answered on the user's
+own machine and nothing leaves the browser. The language model is a fine-tuned
+[LFM2-350M](https://huggingface.co/LiquidAI/LFM2-350M) running on WebGPU through transformers.js; the
+database is duckdb-wasm with the spatial extension; the map is the ArcGIS Maps SDK for JavaScript 5.1.
+
+![North Sea Query: question, FELN plan, DuckDB SQL, rows on the map, all in one tab](docs/screenshot.png)
+
+*"Give me all oil discoveries." answered in 0.2 s on WebGPU: the plan, the SQL, 562 rows on the map.*
 
 ```text
 NorthSea.aprx + .gdb ──regen_northsea.py──> Layers.json, okf/, FELN.json (humanized) + validation
@@ -132,6 +140,7 @@ fine-tuning (checked: identical encodings on the val split).
 cd web && npm install
 npm test                 # feln_sql.js == Python compiler on all 1000 plans; duckdb-wasm result sets == Python on val
 npm run serve            # http://127.0.0.1:8765 (or: python3 -m http.server 8781 --bind 127.0.0.1 -d web)
+BASE=http://127.0.0.1:8781 SCREENSHOT=../docs/screenshot.png node test/browser.mjs 1   # refresh docs/screenshot.png
 npm run test:browser     # Playwright + headless Chromium with WebGPU, end to end on the val questions
 ```
 
