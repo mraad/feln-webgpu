@@ -19,12 +19,33 @@ FELN.json + Layers.json ──prepare_data.py──> data/{train,val}.jsonl
    web/: index.html + app.js (transformers.js WebGPU, duckdb-wasm, feln_sql.js port, ArcGIS map)
 ```
 
+## Regenerating the NorthSea artifacts
+
+```bash
+uv run regen_northsea.py            # Layers.json, okf/, FELN.json (humanized), validation JSON
+uv run regen_northsea.py --no-humanize
+```
+
+`regen_northsea.py` backs up the current files to `NorthSea/backups/regen-<utc>/`, writes
+`Layers.json` with `layers-json` (GDAL reader over `NorthSea.aprx`, `--use-ilike`), keeps the column
+visibility of the previous catalog (Pro hid `symbol`, `casing_lot`, ... in the map) and reapplies
+feln-liquid's alias refinements, writes the OKF bundle with `layers-okf`, generates 1,000 FELN plans
+(seed 20260916, deduplicated on the normalized WHERE, audited with feln-liquid's `audit`), then rewrites
+each grammar text through `claude -p` (Claude Opus 5, settings and tools disabled) so it reads like a
+person typed it. A rewrite is kept only if every quoted literal, number and distance unit of the grammar
+text survives and the text is unique; the grammar text stays on the record as `source_text`.
+The two Pro-toolbox statistics tables are not produced by `layers-json` and were dropped (2026-09-16).
+
 ## Data
 
 Source folder: `~/Documents/ArcGIS/Projects/NorthSea` (`Layers.json` catalog, `FELN.json` 1,000
 synthetic text/plan pairs from [feln](../feln), `NorthSea.ddb`).
 
-- `data/`: 1,000 source rows plus 45 generated water-depth paraphrases ("wells deeper than 350 meters",
+- `data/` (phase 2): 1,000 humanized rows + their grammar wording + 45 water-depth paraphrases + phase
+  templates + conjoined-constraint rewrites of the training grammar rows. A plan's wordings all land on
+  the same side of the 10% split. `prepare_data.py --okf NorthSea/okf` puts the OKF bundle verbatim in
+  the system prompt (~10.9k tokens per row; `train.py --max-length 12288 --batch 4`).
+- `data/` (phase 1): 1,000 source rows plus 45 generated water-depth paraphrases ("wells deeper than 350 meters",
   "depth > 350"): FELN.json names that column in 5 rows only, always as "water depth", and the first model
   copied a user's bare "depth" into a non-existent column. Split 937 train / 108 val (source rows
   stratified by number of layers, paraphrases 1 in 5). System prompt = output contract + layer and
@@ -53,7 +74,8 @@ Holdout, greedy decoding (3 epochs, lr 5e-5, full fine-tune):
 | v1, source rows only | 99 | 99/99 | 92/99 (92.9%) | 0.993 | 99/99 | 0.965 (85) |
 | v2, + depth paraphrases | 108 | 108/108 | 103/108 (95.4%) | 0.996 | 108/108 | 0.989 (94) |
 | v3, + conjoined constraints and phase adjectives, M4 Max (11 min) | 175 | 175/175 | 168/175 (96.0%) | 0.995 | 175/175 | 0.975 (161) |
-| v3, same data on an RTX PRO 6000 (36 s), shipped as `out/lfm2-350m-feln-v3-rtx` | 175 | 175/175 | 169/175 (96.6%) | 0.995 | 175/175 | 0.983 (161) |
+| v3, same data on an RTX PRO 6000 (36 s), `out/lfm2-350m-feln-v3-rtx` | 175 | 175/175 | 169/175 (96.6%) | 0.995 | 175/175 | 0.983 (161) |
+| v4, phase-2 data (humanized + grammar), OKF system prompt, RTX (31 min), shipped as `out/lfm2-350m-feln-v4` | 210 | 210/210 | 203/210 (96.7%) | 0.997 | 210/210 | 0.990 (210) |
 
 Remaining misses are code-table confusions (`discovery_type` Oil = 3 vs 4) and the `core_sample`
 column, which is text `'YES'` where every sibling flag is an integer.
@@ -80,7 +102,8 @@ Quantization sweep on v1 (81 questions), then v2 with the chosen format (90 ques
 | v1 | q4f16, block 32 symmetric | MatMulNBits 4-bit | 298 MB | 68/81 | 72/81 | 0.23 s |
 | v1 | q4f16, block 32 / 128 asymmetric | MatMulNBits 4-bit | 300-317 MB | 71/81 | 74-75/81 | 0.25-0.40 s |
 | v2 | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 85/90 | 89/90 | 0.40 s |
-| v3 RTX (shipped) | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 155/161 | 157/161 | 0.40 s |
+| v3 RTX | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 155/161 | 157/161 | 0.40 s |
+| v4 (shipped), OKF prompt, prefix cached | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 203/210 | 208/210 | 0.46 s |
 
 `onnx.save` appends to an existing external-data file; both export scripts unlink it first.
 
@@ -102,6 +125,10 @@ downloaded file. The browser cache is keyed on `model/version.txt`, written by `
 re-export is never served from the previous version's cache (this bit once: the page kept the v1 weights), the three parquet tables, then for a
 question: chat template -> greedy generate -> JSON -> `feln_sql.js` -> `SELECT ... WHERE OBJECTID IN (plan)`
 -> table + graphics layer. `window.feln.ask(text)` is the same pipeline for tests.
+
+With the OKF system prompt the page prefills the ~10.8k-token prefix once at load (adds ~7 s) and
+reuses its KV/conv cache for every question (`buildPrefixCache` in `app.js`; `?prefix=0` disables it).
+Measured on the same weights: 7.0 s per question without the cache, 0.7-1.3 s with it.
 
 Known limits:
 

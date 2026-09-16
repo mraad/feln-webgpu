@@ -6,6 +6,7 @@ contract + layer names + column names: short enough for browser prefill, enough 
 model to spell columns right.
 """
 
+import argparse
 import json
 import random
 import re
@@ -20,8 +21,16 @@ Reply with ONLY a JSON object with keys "layers", "where", "relations":
 "relations" has one spatial relation per secondary layer: within, contains, intersects, withinDistance <n> <unit>, notWithinDistance <n> <unit>."""
 
 
-def system_prompt(layers: list[dict]) -> str:
+def system_prompt(layers: list[dict], okf: Path | None) -> str:
+    """Contract + schema. With --okf the schema is the OKF bundle verbatim (index + one doc per
+    layer, ~10k tokens); without it, one line of column names per layer (~300 tokens)."""
     lines = [CONTRACT, ""]
+    if okf:
+        lines.append((okf / "index.md").read_text().strip())
+        for layer in layers:
+            doc = okf / f"{layer['name']}.md"
+            lines += ["", doc.read_text().strip()]
+        return "\n".join(lines)
     for layer in layers:
         cols = ", ".join(c["name"] for c in layer["columns"])
         lines.append(f"{layer['name']} ({layer['stype']}): {cols}")
@@ -123,11 +132,30 @@ def paraphrases(samples: list[dict], rng: random.Random) -> list[dict]:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--okf", type=Path, default=None, help="OKF bundle dir to embed in the system prompt (e.g. NorthSea/okf)")
+    args = ap.parse_args()
     layers = json.loads((SRC / "Layers.json").read_text())["layers"]
     samples = json.loads((SRC / "FELN.json").read_text())
     n_source = len(samples)
-    samples += depth_rows(random.Random(1), 45) + phase_rows() + paraphrases(samples[:n_source], random.Random(2))
-    system = system_prompt(layers)
+    # FELN.json rows carry the humanized text plus the grammar text it came from (regen_northsea.py);
+    # train on both wordings, and derive the rule-based paraphrases from the grammar text.
+    # 10% holdout of the source plans, stratified by number of layers. A plan's grammar wording and
+    # the rule-based paraphrases derived from it stay on the same side as its humanized text.
+    rng = random.Random(0)
+    by_arity: dict[int, list[int]] = {}
+    for i, s in enumerate(samples):
+        by_arity.setdefault(len(s["meta"]["layers"]), []).append(i)
+    val_source: set[int] = set()
+    for idx in by_arity.values():
+        val_source.update(rng.sample(idx, len(idx) // 10))
+    grammar = {i: {"text": s["source_text"], "meta": s["meta"]} for i, s in enumerate(samples) if s.get("source_text") and s["source_text"] != s["text"]}
+    val_grammar = [g for i, g in grammar.items() if i in val_source]
+    train_grammar = [g for i, g in grammar.items() if i not in val_source]
+    extra = depth_rows(random.Random(1), 45) + phase_rows()
+    samples += val_grammar + train_grammar + extra + paraphrases(train_grammar or [s for i, s in enumerate(samples) if i not in val_source], random.Random(2))
+    val = val_source | set(range(n_source, n_source + len(val_grammar))) | set(range(n_source + len(grammar), n_source + len(grammar) + len(extra), 5))
+    system = system_prompt(layers, args.okf)
     (OUT / "system_prompt.txt").write_text(system)
 
     rows = []
@@ -141,16 +169,6 @@ def main() -> None:
             }
         )
 
-    # 10% holdout of the source rows, stratified by relation arity so val covers 1/2/3-layer
-    # shapes; the depth paraphrases keep their own 1-in-5 holdout.
-    rng = random.Random(0)
-    by_arity: dict[int, list[int]] = {}
-    for i, s in enumerate(samples[:n_source]):
-        by_arity.setdefault(len(s["meta"]["layers"]), []).append(i)
-    val = set()
-    for idx in by_arity.values():
-        val.update(rng.sample(idx, len(idx) // 10))
-    val.update(range(n_source, len(samples), 5))
 
     for name, keep in (("train", lambda i: i not in val), ("val", lambda i: i in val)):
         with (OUT / f"{name}.jsonl").open("w") as fh:
@@ -160,7 +178,7 @@ def main() -> None:
                     fh.write(json.dumps(row) + "\n")
                     n += 1
         print(f"{name}: {n}")
-    print(f"system prompt: {len(system)} chars")
+    print(f"system prompt: {len(system)} chars ({'OKF' if args.okf else 'column names'})")
 
 
 if __name__ == "__main__":

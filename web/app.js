@@ -1,6 +1,6 @@
 // Text -> FELN (LFM2-350M fine-tune, transformers.js on WebGPU) -> DuckDB SQL (feln_sql.js)
 // -> rows (duckdb-wasm + spatial). Everything runs in the browser; nothing leaves the tab.
-import { AutoTokenizer, AutoModelForCausalLM, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0";
+import { AutoTokenizer, AutoModelForCausalLM, DynamicCache, Tensor, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0";
 import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.33.1-dev57.0/+esm";
 import { compile } from "./feln_sql.js";
 import { TABLES, loadSql } from "./db.js";
@@ -167,11 +167,41 @@ function promptFor(text) {
   );
 }
 
+// ---- prefix cache ----
+// The system prompt (the OKF bundle, ~10.9k tokens) is identical for every question, so its
+// KV/conv state is computed once at load and reused: generate() sees a cache shorter than the
+// prompt and only runs the question tokens through the model. The cached tensors live on the CPU,
+// so DynamicCache.update() never disposes them and one copy serves every query.
+const promptIds = (text) => promptFor(text).input_ids.tolist()[0];
+
+async function buildPrefixCache() {
+  const a = promptIds("a"), b = promptIds("Which wells are dry?");
+  let n = 0;
+  while (n < a.length && n < b.length && a[n] === b[n]) n++;
+  const ids = a.slice(0, n);
+  const out = await model.generate({
+    input_ids: new Tensor("int64", BigInt64Array.from(ids), [1, n]),
+    attention_mask: new Tensor("int64", new BigInt64Array(n).fill(1n), [1, n]),
+    max_new_tokens: 1, do_sample: false, past_key_values: new DynamicCache(), return_dict_in_generate: true,
+  });
+  const entries = {};
+  for (const [key, t] of Object.entries(out.past_key_values)) entries[key] = new Tensor(t.type, await t.ort_tensor.getData(true), t.dims);
+  return { ids, entries, tokens: n };
+}
+
+const prefix = new URLSearchParams(location.search).get("prefix") === "0" ? null : await buildPrefixCache();
+
 async function textToFeln(text) {
   const inputs = promptFor(text);
-  const out = await model.generate({ ...inputs, max_new_tokens: 200, do_sample: false });
-  const raw = tokenizer.decode(out.tolist()[0].slice(inputs.input_ids.dims[1]), { skip_special_tokens: true });
-  return { raw, feln: JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) };
+  const ids = inputs.input_ids.tolist()[0];
+  const cached = prefix && ids.length > prefix.ids.length && prefix.ids.every((v, i) => v === ids[i]);
+  const opts = cached ? { past_key_values: new DynamicCache({ ...prefix.entries }), return_dict_in_generate: true } : {};
+  const out = await model.generate({ ...inputs, max_new_tokens: 200, do_sample: false, ...opts });
+  const seq = cached ? out.sequences : out;
+  if (cached) await out.past_key_values.dispose();
+  const raw = tokenizer.decode(seq.tolist()[0].slice(inputs.input_ids.dims[1]), { skip_special_tokens: true });
+  try { return { raw, feln: JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) }; }
+  catch { return { raw, feln: null }; }
 }
 
 /** Quoted identifiers in each WHERE that are not columns of that layer. */
@@ -189,6 +219,7 @@ async function ask(text) {
   const t0 = performance.now();
   const { raw, feln } = await textToFeln(text);
   const genMs = performance.now() - t0;
+  if (!feln) return { feln, raw, genMs, rows: null, error: `the model returned no query plan: ${JSON.stringify(raw.slice(0, 120))}` };
   let sql;
   try { sql = compile(feln, catalog); } catch (err) { return { feln, raw, genMs, rows: null, error: err.message }; }
   const bad = unknownColumns(feln);
@@ -229,11 +260,11 @@ $("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   $("go").disabled = true;
   status("Thinking");
-  try { render(await ask($("q").value)); status(`Ready on ${device}`, "ready"); }
+  try { render(await ask($("q").value)); status(`Ready on ${device}${prefix ? ` (${prefix.tokens}-token prompt prefix cached)` : ""}`, "ready"); }
   catch (err) { status(`Error: ${err.message}`, "error"); }
   $("go").disabled = false;
 });
-status(`Ready on ${device}`, "ready");
+status(`Ready on ${device}${prefix ? ` (${prefix.tokens}-token prompt prefix cached)` : ""}`, "ready");
 $("loading-card").remove();
 $("q").disabled = $("go").disabled = false;
 $("q").focus();
