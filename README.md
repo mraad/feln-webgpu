@@ -158,8 +158,11 @@ Measured on the same weights: 7.0 s per question without the cache, 0.7-1.3 s wi
 
 Known limits:
 
-- The OKF docs embed absolute `file:///Users/...` paths in `resource:`/`sources:`, so the shipped
-  system prompt contains the author's home path. Harmless for the model; strip it if that matters.
+- The OKF docs and `Layers.json` embed absolute `file://` paths under the author's home directory.
+  `prepare_data.py` replaces the home directory with `/Users/user` in the system prompt;
+  `web/data/Layers.json` was redacted the same way by hand (`uri` is not read by the app). Training
+  used the unredacted prompt; the shipped redacted one scores the same on the browser holdout
+  (203/210 exact, 208/210 result sets), whereas `~` in its place lost one fragile question.
 - v3 data adds three paraphrase families on top of FELN.json: water-depth wording, "in-service /
   decommissioned / abandoned pipelines" for `current_phase`, and constraints joined into one sentence
   ("wells that are within 4 miles of ... and contain ..."). Other wording outside the grammar can still

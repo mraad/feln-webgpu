@@ -770,7 +770,7 @@
       "hints": [
         "Oil and gas wells in the north sea."
       ],
-      "uri": "/Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Wellbores"
+      "uri": "/Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Wellbores"
     },
     {
       "name": "Pipelines",
@@ -1053,7 +1053,7 @@
       "hints": [
         "Pipelines in the North Sea in various phases."
       ],
-      "uri": "/Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Pipelines"
+      "uri": "/Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Pipelines"
     },
     {
       "name": "Discoveries",
@@ -1439,7 +1439,7 @@
       "hints": [
         "Discover fields with various hydrocarbon content."
       ],
-      "uri": "/Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Discoveries"
+      "uri": "/Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Discoveries"
     }
   ]
 }

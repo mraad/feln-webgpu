@@ -14,7 +14,7 @@
   180/210
   200/210
 
-=== val.jsonl n=210 /Users/mraad/GWorkspace/feln-webgpu/out/lfm2-350m-feln-v4 ===
+=== val.jsonl n=210 ~/GWorkspace/feln-webgpu/out/lfm2-350m-feln-v4 ===
   valid      210/210
   exact      203/210  96.7%
   structural 0.997

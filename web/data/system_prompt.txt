@@ -17,7 +17,7 @@ okf_version: "0.2"
 type: "ArcGIS Feature Layer"
 title: "Wells"
 description: "Oil and gas wells in the north sea."
-resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Wellbores"
+resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Wellbores"
 tags: ["arcgis", "filegdb", "point"]
 generated: { by: "layers-json/0.4.2", at: "2026-09-16T16:33:05Z" }
 table_name: "Wells"
@@ -25,8 +25,8 @@ stype: "Point"
 display: "well_name"
 subtype: "content_type"
 sources:
-  - { id: "gdb", resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb", title: "File GDB NorthSea.gdb", last_modified: "2026-09-16T16:12:23Z" }
-  - { id: "aprx", resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.aprx", title: "ArcGIS project NorthSea.aprx", last_modified: "2026-09-16T16:12:10Z" }
+  - { id: "gdb", resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb", title: "File GDB NorthSea.gdb", last_modified: "2026-09-16T16:12:23Z" }
+  - { id: "aprx", resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.aprx", title: "ArcGIS project NorthSea.aprx", last_modified: "2026-09-16T16:12:10Z" }
 ---
 
 Oil and gas wells in the north sea.
@@ -325,7 +325,7 @@ Field names, types, domains and sampled values come from the File GDB;[^gdb] lay
 type: "ArcGIS Feature Layer"
 title: "Pipelines"
 description: "Pipelines in the North Sea in various phases."
-resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Pipelines"
+resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Pipelines"
 tags: ["arcgis", "filegdb", "polyline"]
 generated: { by: "layers-json/0.4.2", at: "2026-09-16T16:33:05Z" }
 table_name: "Pipelines"
@@ -333,8 +333,8 @@ stype: "Polyline"
 display: "pipe_name"
 subtype: "PipelinesType"
 sources:
-  - { id: "gdb", resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb", title: "File GDB NorthSea.gdb", last_modified: "2026-09-16T16:12:23Z" }
-  - { id: "aprx", resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.aprx", title: "ArcGIS project NorthSea.aprx", last_modified: "2026-09-16T16:12:10Z" }
+  - { id: "gdb", resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb", title: "File GDB NorthSea.gdb", last_modified: "2026-09-16T16:12:23Z" }
+  - { id: "aprx", resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.aprx", title: "ArcGIS project NorthSea.aprx", last_modified: "2026-09-16T16:12:10Z" }
 ---
 
 Pipelines in the North Sea in various phases.
@@ -449,7 +449,7 @@ Field names, types, domains and sampled values come from the File GDB;[^gdb] lay
 type: "ArcGIS Feature Layer"
 title: "Discoveries"
 description: "Discover fields with various hydrocarbon content."
-resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Discoveries"
+resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb/Discoveries"
 tags: ["arcgis", "filegdb", "polygon"]
 generated: { by: "layers-json/0.4.2", at: "2026-09-16T16:33:05Z" }
 table_name: "Discoveries"
@@ -457,8 +457,8 @@ stype: "Polygon"
 display: "discovery_name"
 subtype: "discovery_type"
 sources:
-  - { id: "gdb", resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb", title: "File GDB NorthSea.gdb", last_modified: "2026-09-16T16:12:23Z" }
-  - { id: "aprx", resource: "file:///Users/mraad/Documents/ArcGIS/Projects/NorthSea/NorthSea.aprx", title: "ArcGIS project NorthSea.aprx", last_modified: "2026-09-16T16:12:10Z" }
+  - { id: "gdb", resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.gdb", title: "File GDB NorthSea.gdb", last_modified: "2026-09-16T16:12:23Z" }
+  - { id: "aprx", resource: "file:///Users/user/Documents/ArcGIS/Projects/NorthSea/NorthSea.aprx", title: "ArcGIS project NorthSea.aprx", last_modified: "2026-09-16T16:12:10Z" }
 ---
 
 Discover fields with various hydrocarbon content.
