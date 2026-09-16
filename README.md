@@ -131,7 +131,7 @@ fine-tuning (checked: identical encodings on the val split).
 ```bash
 cd web && npm install
 npm test                 # feln_sql.js == Python compiler on all 1000 plans; duckdb-wasm result sets == Python on val
-npm run serve            # http://127.0.0.1:8765
+npm run serve            # http://127.0.0.1:8765 (or: python3 -m http.server 8781 --bind 127.0.0.1 -d web)
 npm run test:browser     # Playwright + headless Chromium with WebGPU, end to end on the val questions
 ```
 
@@ -151,7 +151,6 @@ Known limits:
 
 - The OKF docs embed absolute `file:///Users/...` paths in `resource:`/`sources:`, so the shipped
   system prompt contains the author's home path. Harmless for the model; strip it if that matters.
-
 - v3 data adds three paraphrase families on top of FELN.json: water-depth wording, "in-service /
   decommissioned / abandoned pipelines" for `current_phase`, and constraints joined into one sentence
   ("wells that are within 4 miles of ... and contain ..."). Other wording outside the grammar can still
