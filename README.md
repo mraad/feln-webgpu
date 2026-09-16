@@ -139,7 +139,7 @@ fine-tuning (checked: identical encodings on the val split).
 
 ```bash
 cd web && npm install
-npm test                 # feln_sql.js == Python compiler on all 1000 plans; duckdb-wasm result sets == Python on val
+npm test                 # feln_sql.js == Python compiler on all 1000 plans (`uv run gold_sql.py` after a FELN.json regen); duckdb-wasm result sets == Python on val
 npm run serve            # http://127.0.0.1:8765 (or: python3 -m http.server 8781 --bind 127.0.0.1 -d web)
 BASE=http://127.0.0.1:8781 SCREENSHOT=../docs/screenshot.png node test/browser.mjs 1   # refresh docs/screenshot.png
 npm run test:browser     # Playwright + headless Chromium with WebGPU, end to end on the val questions
