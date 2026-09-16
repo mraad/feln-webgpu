@@ -6,9 +6,11 @@ WebGPU through transformers.js; the database is duckdb-wasm with the spatial ext
 ArcGIS Maps SDK for JavaScript 5.1.
 
 ```text
-FELN.json + Layers.json ──prepare_data.py──> data/{train,val}.jsonl
+NorthSea.aprx + .gdb ──regen_northsea.py──> Layers.json, okf/, FELN.json (humanized) + validation
                                     │
-                            train.py (TRL, full FT, MPS)  ──> out/lfm2-350m-feln
+FELN.json + Layers.json + okf/ ──prepare_data.py --okf──> data/{train,val}.jsonl, system_prompt.txt
+                                    │
+                            train.py (TRL, full FT; MPS locally or CUDA on the RTX box)  ──> out/<run>
                                     │
       evaluate.py (exact / structural / SQL executes on NorthSea.ddb)
                                     │
@@ -51,20 +53,27 @@ synthetic text/plan pairs from [feln](../feln), `NorthSea.ddb`).
   stratified by number of layers, paraphrases 1 in 5). System prompt = output contract + layer and
   column names; hints and value codes live in the weights.
 - `web/data/`: `Wells`, `Discoveries`, `Pipelines` as parquet with WKB geometry (5.9 MB), `Layers.json`,
-  the system prompt. `Wells_depth_stats` / `Wells_deep_400_stats` are in the catalog and training data
-  but not in `NorthSea.ddb`, so the page reports "table not loaded" for them.
+  the system prompt (the same OKF prompt the model was trained on).
+- Plans use the generator's cast form (`PipelinesType = cast(1 as SMALLINT)`, bare identifiers), which
+  the OKF hints prescribe. Phase 1 trained on feln-liquid's normalized form (`"pipelinestype" = 1`).
+  DuckDB runs both; the browser gold sets were rebuilt from the cast form.
 
 ## Train and evaluate
 
 ```bash
-uv run prepare_data.py
-uv run train.py                       # ~20 min on M4 Max; opens a Terminal window with watch.py
-uv run train.py --no-tui              # same, without the dashboard window
-uv run evaluate.py data/val.jsonl --model out/lfm2-350m-feln
+uv run prepare_data.py --okf ~/Documents/ArcGIS/Projects/NorthSea/okf
+uv run train.py --out out/lfm2-350m-feln-v4 --batch 4 --max-length 12288      # opens a Terminal window with watch.py
+uv run train.py --no-tui ...                                                  # without the dashboard window
+uv run train.py --base LiquidAI/LFM2.5-1.2B-Instruct --lr 2e-5 --batch 4 --max-length 12288 --out out/lfm25-1.2b-feln-v4
+uv run evaluate.py data/val.jsonl --model out/lfm2-350m-feln-v4
 uv run evaluate.py data/val.jsonl --model LiquidAI/LFM2-350M   # untuned baseline
 ```
 
-`train.py` writes `<out>/status.json` and `<out>/metrics.jsonl`; `uv run watch.py <out>` renders them.
+`train.py` writes `<out>/status.json` and `<out>/metrics.jsonl`; `uv run watch.py <out>` renders them
+(eval loss appears on the epoch-end rows only). On the RTX box the same commands run from
+`~/feln-webgpu` (uv venv, torch cu130); copy `data/*.jsonl` + `system_prompt.txt` there, run with
+`--no-tui`, copy `out/<run>` back and export here. A 350M run with the OKF prompt takes 31 min on one
+RTX PRO 6000 (36 s with the short phase-1 prompt); the 1.2B run took 71 min.
 
 Holdout, greedy decoding (3 epochs, lr 5e-5, full fine-tune):
 
@@ -76,9 +85,15 @@ Holdout, greedy decoding (3 epochs, lr 5e-5, full fine-tune):
 | v3, + conjoined constraints and phase adjectives, M4 Max (11 min) | 175 | 175/175 | 168/175 (96.0%) | 0.995 | 175/175 | 0.975 (161) |
 | v3, same data on an RTX PRO 6000 (36 s), `out/lfm2-350m-feln-v3-rtx` | 175 | 175/175 | 169/175 (96.6%) | 0.995 | 175/175 | 0.983 (161) |
 | v4, phase-2 data (humanized + grammar), OKF system prompt, RTX (31 min), shipped as `out/lfm2-350m-feln-v4` | 210 | 210/210 | 203/210 (96.7%) | 0.997 | 210/210 | 0.990 (210) |
+| v4 on LiquidAI/LFM2.5-1.2B-Instruct (feln-liquid's base), same data, RTX GPU 1 (71 min, lr 2e-5), `out/lfm25-1.2b-feln-v4`, not exported | 210 | 210/210 | 204/210 (97.1%) | 0.999 | 210/210 | 0.995 (210) |
 
-Remaining misses are code-table confusions (`discovery_type` Oil = 3 vs 4) and the `core_sample`
-column, which is text `'YES'` where every sibling flag is an integer.
+Both v4 models miss the same questions, so the gap is in the data, not the model: humanized wordings
+that outrun the schema vocabulary ("a blank content field" -> invented column `content_field`; "a
+source other than Department of Energy & Climate Change" -> label instead of the stored code `DECC`;
+"pipelines of type Unknown whose to facility is 'KOLLSNES' or 'TEESSIDE'" -> OR grouping), plus two
+three-layer questions. The 350M alone also misses "Unknown pipelines outside Denmark" (`=` for `<>`).
+The 1.2B gains 0.5 points for a ~1.5 GB 8-bit download and about three times the WebGPU cost per
+token, so the 350M stays in the app.
 
 ## Export to the browser
 
@@ -120,17 +135,22 @@ npm run serve            # http://127.0.0.1:8765
 npm run test:browser     # Playwright + headless Chromium with WebGPU, end to end on the val questions
 ```
 
-`app.js` loads `model/` (8-bit, 443 MB; `?model=model&dtype=fp16` for fp16) and shows a progress row per
-downloaded file. The browser cache is keyed on `model/version.txt`, written by `onnx_quantize.py`, so a
-re-export is never served from the previous version's cache (this bit once: the page kept the v1 weights), the three parquet tables, then for a
-question: chat template -> greedy generate -> JSON -> `feln_sql.js` -> `SELECT ... WHERE OBJECTID IN (plan)`
--> table + graphics layer. `window.feln.ask(text)` is the same pipeline for tests.
+`app.js` loads `model/` (8-bit, 443 MB; `?model=model&dtype=fp16` for fp16) and the three parquet
+tables, with a progress row per downloaded file; the loading card is removed when ready and shows the
+error if a download fails. The browser cache is keyed on `model/version.txt`, written by
+`onnx_quantize.py`, so a re-export is never served from the previous version's cache (this bit once:
+the page kept the v1 weights). Per question: chat template -> greedy generate -> JSON -> column names
+checked against the catalog -> `feln_sql.js` -> `SELECT ... WHERE OBJECTID IN (plan)` -> table +
+graphics layer on the dark-gray basemap. `window.feln.ask(text)` is the same pipeline for tests.
 
 With the OKF system prompt the page prefills the ~10.8k-token prefix once at load (adds ~7 s) and
 reuses its KV/conv cache for every question (`buildPrefixCache` in `app.js`; `?prefix=0` disables it).
 Measured on the same weights: 7.0 s per question without the cache, 0.7-1.3 s with it.
 
 Known limits:
+
+- The OKF docs embed absolute `file:///Users/...` paths in `resource:`/`sources:`, so the shipped
+  system prompt contains the author's home path. Harmless for the model; strip it if that matters.
 
 - v3 data adds three paraphrase families on top of FELN.json: water-depth wording, "in-service /
   decommissioned / abandoned pipelines" for `current_phase`, and constraints joined into one sentence

@@ -1,0 +1,36 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 75637.50it/s]
+[transformers] `causal_conv1d_fn` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+[transformers] `causal_conv1d_update` is falling back to its reference PyTorch implementation because `causal_conv1d` is not installed. This is correct but much slower; install `causal_conv1d` for the optimized kernel.
+  0/210
+  20/210
+  40/210
+  60/210
+  80/210
+  100/210
+  120/210
+  140/210
+  160/210
+  180/210
+  200/210
+
+=== val.jsonl n=210 /Users/mraad/GWorkspace/feln-webgpu/out/lfm25-1.2b-feln-v4 ===
+  valid      210/210
+  exact      204/210  97.1%
+  structural 0.999
+  sql_ok     210/210
+  exec       210  jaccard 0.995
+--- MISS ---
+{"q": "I need all wells with status not 'COMPLETED (SHUT IN)' and source Danish Energy Agency, within 15 kilometers of oil pipelines but more than 50 miles from any matching condensate discovery.", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN') and (source = 'DEA')", "PipelinesType = cast(4 as SMALLINT)", "discovery_type = cast(5 as INTEGER)"], "relations": ["withinDistance 15 kilometers", "notWithinDistance 50 miles"]}, "gold": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN)') and (source = 'DE
+--- MISS ---
+{"q": "Pull up pipelines of type Unknown whose to facility is 'KOLLSNES' or 'TEESSIDE', restricted to those that intersect a condensate discovery.", "pred": {"layers": ["Pipelines", "Discoveries"], "where": ["PipelinesType = cast(0 as SMALLINT) and (to_facility = 'KOLLSNES' or to_facility = 'TEESSIDE')", "discovery_type = cast(5 as INTEGER)"], "relations": ["intersects"]}, "gold": {"layers": ["Pipelines", "Discoveries"], "where": ["(PipelinesType = cast(0 as SMALLINT)) and (to_facility = 'KOLLSNES' or to_facility = 'TEESSIDE')", "discovery_type = cast(5 as INTEGER)"], "relations": ["intersects
+--- MISS ---
+{"q": "Which discoveries have '22/29-' in the discovery wellbore name and a source other than Department of Energy & Climate Change?", "pred": {"layers": ["Discoveries"], "where": ["(discovery_wellbore_name ILIKE '%22/29-%') and (source <> 'DECC')"], "relations": []}, "gold": {"layers": ["Discoveries"], "where": ["(source <> 'DECC') and (discovery_wellbore_name ILIKE '%22/29-%')"], "relations": []}}
+--- MISS ---
+{"q": "Find 'shows' wells that lie inside gas discoveries and stay more than 2000 meters away from every unknown pipeline.", "pred": {"layers": ["Wells", "Discoveries", "Pipelines"], "where": ["content_type = cast(9 as SMALLINT)", "discovery_type = cast(1 as INTEGER)", "PipelinesType = cast(0 as SMALLINT)"], "relations": ["within", "notWithinDistance 2000 meters"]}, "gold": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["content_type = cast(9 as SMALLINT)", "PipelinesType = cast(0 as SMALLINT)", "discovery_type = cast(1 as INTEGER)"], "relations": ["notWithinDistance 2000 meters",
+--- MISS ---
+{"q": "Find me wells with a blank content field that are within 10.5 miles of injection pipelines with dimension no more than 28.0 — and only the ones that lie inside a discovery.", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["content_field = ''", "PipelinesType = cast(3 as SMALLINT) and (dimension <= cast(28.0 as DOUBLE PRECISION))", ""], "relations": ["withinDistance 10.5 miles", "within"]}, "gold": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["content = ''", "PipelinesType = cast(3 as SMALLINT) and (dimension <= cast(28.0 as DOUBLE PRECISION))", ""], "
+--- MISS ---
+{"q": "Find me wells with a blank content field that are within 10.5 miles of injection pipelines with dimension no more than 28.0 — and only the ones that lie inside a discovery.", "sql_error": "Binder Error: Referenced column \"content_field\" not found in FROM clause!\nCandidate bindings: \"content\", \"content_type\", \"entity_id\", \"completion_date\", \"geochem_info\"", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["content_field = ''", "PipelinesType = cast(3 as SMALLINT) and (dimension <= cast(28.0 as DOUBLE PRECISION))", ""], "relations": ["withinDistance 10.5 mi
+--- MISS ---
+{"q": "Show me all wells where (status is not 'COMPLETED (SHUT IN)') and (source is Danish Energy Agency). The returned wells must be within 15 kilometers of oil pipelines. The returned wells must be more than 50 miles from all matching condensate discoveries.", "pred": {"layers": ["Wells", "Pipelines", "Discoveries"], "where": ["(status <> 'COMPLETED (SHUT IN') and (source = 'DEA')", "PipelinesType = cast(4 as SMALLINT)", "discovery_type = cast(5 as INTEGER)"], "relations": ["withinDistance 15 kilometers", "notWithinDistance 50 miles"]}, "gold": {"layers": ["Wells", "Pipelines", "Discoveries"
+(7 misses total)
