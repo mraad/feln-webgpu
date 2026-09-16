@@ -27,9 +27,42 @@ def system_prompt(layers: list[dict]) -> str:
     return "\n".join(lines)
 
 
+# FELN.json mentions water_depth in 5 of 1000 rows, always as "water depth", so the model copied a
+# user's bare "depth" into a non-existent column. These templates teach the synonyms; thresholds
+# are drawn from the real value range (NorthSea water_depth is 0-1350 m).
+DEPTH_TEMPLATES = [
+    ("Show all wells with depth > {x} meters", ">"),
+    ("Show all wells with depth greater than {x} m", ">"),
+    ("Find wells deeper than {x} meters", ">"),
+    ("List wells with a depth of more than {x} meters", ">"),
+    ("Wells with water depth over {x}", ">"),
+    ("Which wells are in water deeper than {x} meters?", ">"),
+    ("Show wells with depth < {x} meters", "<"),
+    ("Find wells shallower than {x} meters", "<"),
+    ("List wells with depth under {x} m", "<"),
+    ("Wells in water less than {x} meters deep", "<"),
+    ("Show all wells with depth >= {x} meters", ">="),
+    ("Find wells at least {x} meters deep", ">="),
+    ("Show wells with depth <= {x} meters", "<="),
+    ("Find wells at most {x} meters deep", "<="),
+    ("Show wells whose depth is {x} meters", "="),
+]
+
+
+def depth_rows(rng: random.Random, n: int) -> list[dict]:
+    out = []
+    for i in range(n):
+        template, op = DEPTH_TEMPLATES[i % len(DEPTH_TEMPLATES)]
+        x = rng.choice([rng.randint(50, 1300), round(rng.uniform(50, 1300), 1)])
+        out.append({"text": template.format(x=x), "meta": {"layers": ["Wells"], "where": [f'"water_depth" {op} {x}'], "relations": []}})
+    return out
+
+
 def main() -> None:
     layers = json.loads((SRC / "Layers.json").read_text())["layers"]
     samples = json.loads((SRC / "FELN.json").read_text())
+    n_source = len(samples)
+    samples += depth_rows(random.Random(1), 45)
     system = system_prompt(layers)
     (OUT / "system_prompt.txt").write_text(system)
 
@@ -44,14 +77,16 @@ def main() -> None:
             }
         )
 
-    # 10% holdout, stratified by relation arity so val covers 1/2/3-layer shapes.
+    # 10% holdout of the source rows, stratified by relation arity so val covers 1/2/3-layer
+    # shapes; the depth paraphrases keep their own 1-in-5 holdout.
     rng = random.Random(0)
     by_arity: dict[int, list[int]] = {}
-    for i, s in enumerate(samples):
+    for i, s in enumerate(samples[:n_source]):
         by_arity.setdefault(len(s["meta"]["layers"]), []).append(i)
     val = set()
     for idx in by_arity.values():
         val.update(rng.sample(idx, len(idx) // 10))
+    val.update(range(n_source, len(samples), 5))
 
     for name, keep in (("train", lambda i: i not in val), ("val", lambda i: i in val)):
         with (OUT / f"{name}.jsonl").open("w") as fh:

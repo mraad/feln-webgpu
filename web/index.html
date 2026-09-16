@@ -21,17 +21,21 @@
   th, td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; white-space: nowrap; }
   .wrap { overflow-x: auto; }
   h2 { font-size: 1rem; margin: 10px 0 2px; color: var(--muted); }
+  #progress { display: grid; grid-template-columns: max-content 1fr max-content; gap: 4px 10px; align-items: center; font-size: 13px; color: var(--muted); margin: 6px 0; }
+  #progress:empty { display: none; }
+  #progress progress { width: 100%; height: 8px; }
   arcgis-map { display: block; height: 420px; border: 1px solid var(--line); border-radius: 6px; margin: 6px 0 12px; }
 </style>
 </head>
 <body>
 <h1>North Sea: ask in English, run in DuckDB. All in this tab.</h1>
 <div id="status">Loading...</div>
+<div id="progress"></div>
 <form id="form">
   <input id="q" placeholder="e.g. Show gas pipelines within 5 kilometers of dry wells" autocomplete="off" disabled>
   <button id="go" disabled>Ask</button>
 </form>
-<arcgis-map id="map" basemap="topo-vector" center="3, 60" zoom="5"><arcgis-zoom slot="top-left"></arcgis-zoom></arcgis-map>
+<arcgis-map id="map" basemap="dark-gray-vector" center="3, 60" zoom="5"><arcgis-zoom slot="top-left"></arcgis-zoom></arcgis-map>
 <h2>FELN</h2><pre id="feln"></pre>
 <h2>SQL</h2><pre id="sql"></pre>
 <h2 id="rows-h">Rows</h2><div class="wrap"><table id="rows"></table></div>

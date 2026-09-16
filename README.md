@@ -24,8 +24,11 @@ FELN.json + Layers.json ──prepare_data.py──> data/{train,val}.jsonl
 Source folder: `~/Documents/ArcGIS/Projects/NorthSea` (`Layers.json` catalog, `FELN.json` 1,000
 synthetic text/plan pairs from [feln](../feln), `NorthSea.ddb`).
 
-- `data/`: 901 train / 99 val (stratified by number of layers), system prompt = output contract +
-  layer and column names. Hints and value codes live in the weights.
+- `data/`: 1,000 source rows plus 45 generated water-depth paraphrases ("wells deeper than 350 meters",
+  "depth > 350"): FELN.json names that column in 5 rows only, always as "water depth", and the first model
+  copied a user's bare "depth" into a non-existent column. Split 937 train / 108 val (source rows
+  stratified by number of layers, paraphrases 1 in 5). System prompt = output contract + layer and
+  column names; hints and value codes live in the weights.
 - `web/data/`: `Wells`, `Discoveries`, `Pipelines` as parquet with WKB geometry (5.9 MB), `Layers.json`,
   the system prompt. `Wells_depth_stats` / `Wells_deep_400_stats` are in the catalog and training data
   but not in `NorthSea.ddb`, so the page reports "table not loaded" for them.
@@ -42,12 +45,13 @@ uv run evaluate.py data/val.jsonl --model LiquidAI/LFM2-350M   # untuned baselin
 
 `train.py` writes `<out>/status.json` and `<out>/metrics.jsonl`; `uv run watch.py <out>` renders them.
 
-Holdout (99 questions, greedy):
+Holdout, greedy decoding (3 epochs, lr 5e-5, full fine-tune):
 
-| model | valid JSON | exact plan | structural | SQL compiles | OBJECTID Jaccard (85 executable) |
-|---|---|---|---|---|---|
-| LFM2-350M untuned | 0/99 | 0 | 0 | 0 | - |
-| fine-tuned, 3 epochs, lr 5e-5, full FT | 99/99 | 92/99 (92.9%) | 0.993 | 99/99 | 0.965 |
+| model | holdout | valid JSON | exact plan | structural | SQL compiles | OBJECTID Jaccard (executable rows) |
+|---|---|---|---|---|---|---|
+| LFM2-350M untuned | 99 | 0/99 | 0 | 0 | 0 | - |
+| v1, source rows only | 99 | 99/99 | 92/99 (92.9%) | 0.993 | 99/99 | 0.965 (85) |
+| v2, + depth paraphrases (`out/lfm2-350m-feln-v2`, shipped) | 108 | 108/108 | 103/108 (95.4%) | 0.996 | 108/108 | 0.989 (94) |
 
 Remaining misses are code-table confusions (`discovery_type` Oil = 3 vs 4) and the `core_sample`
 column, which is text `'YES'` where every sibling flag is an integer.
@@ -64,14 +68,18 @@ uv run onnx_check.py --onnx web/model/onnx/model_fp16.onnx --model out/lfm2-350m
 uv run onnx_quantize.py web/model/onnx/model_fp16.onnx web/model/onnx/model_q8_fp16.onnx
 ```
 
-Browser (headless Chromium, WebGPU, the 81 holdout questions whose plans execute on the loaded tables):
+Browser (headless Chromium, WebGPU, holdout questions whose plans execute on the loaded tables).
+Quantization sweep on v1 (81 questions), then v2 with the chosen format (90 questions):
 
-| onnx file | weights | size | exact plan | result sets | generate |
-|---|---|---|---|---|---|
-| model_fp16 | fp16 | 692 MB | 74/81 | 77/81 | 0.68 s |
-| model_q8_fp16 (default) | MatMulNBits 8-bit, block 128 | 443 MB | 74/81 | 77/81 | 0.41 s |
-| q4f16, block 32 symmetric | MatMulNBits 4-bit | 298 MB | 68/81 | 72/81 | 0.23 s |
-| q4f16, block 32 / 128 asymmetric | MatMulNBits 4-bit | 300-317 MB | 71/81 | 74-75/81 | 0.25-0.40 s |
+| model | onnx file | weights | size | exact plan | result sets | generate |
+|---|---|---|---|---|---|---|
+| v1 | model_fp16 | fp16 | 692 MB | 74/81 | 77/81 | 0.68 s |
+| v1 | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 74/81 | 77/81 | 0.41 s |
+| v1 | q4f16, block 32 symmetric | MatMulNBits 4-bit | 298 MB | 68/81 | 72/81 | 0.23 s |
+| v1 | q4f16, block 32 / 128 asymmetric | MatMulNBits 4-bit | 300-317 MB | 71/81 | 74-75/81 | 0.25-0.40 s |
+| v2 (shipped) | model_q8_fp16 | MatMulNBits 8-bit, block 128 | 443 MB | 85/90 | 89/90 | 0.40 s |
+
+`onnx.save` appends to an existing external-data file; both export scripts unlink it first.
 
 `scratch/model_fp16.onnx{,_data}` is `onnx-community/LFM2-350M-ONNX/onnx/model_fp16.onnx`.
 `web/model/*.json` (config, tokenizer) come from the same repo; the tokenizer is unchanged by
@@ -86,12 +94,17 @@ npm run serve            # http://127.0.0.1:8765
 npm run test:browser     # Playwright + headless Chromium with WebGPU, end to end on the val questions
 ```
 
-`app.js` loads `model/` (8-bit, 443 MB, cached by the browser; `?model=model&dtype=fp16` for fp16), the three parquet tables, then for a
+`app.js` loads `model/` (8-bit, 443 MB; `?model=model&dtype=fp16` for fp16) and shows a progress row per
+downloaded file. The browser cache is keyed on `model/version.txt`, written by `onnx_quantize.py`, so a
+re-export is never served from the previous version's cache (this bit once: the page kept the v1 weights), the three parquet tables, then for a
 question: chat template -> greedy generate -> JSON -> `feln_sql.js` -> `SELECT ... WHERE OBJECTID IN (plan)`
 -> table + graphics layer. `window.feln.ask(text)` is the same pipeline for tests.
 
 Known limits:
 
+- Phrasing outside the generator grammar can still misfire: "wells deeper than 500 meters and within 5
+  kilometers of gas pipelines" folds the pipeline filter into the wells WHERE; the grammar says "The
+  returned wells must be within 5 kilometers of gas pipelines". The page reports the invalid plan.
 - Geometry is WGS84 degrees and `ST_DWithin` is fed metres, exactly as the Python `FELNToDuckDB`
   does; result sets match Python, but distances are not geodesic. Fix in `feln` first, then here.
 - transformers.js needs `env.localModelPath` to be a relative path; an absolute URL silently skips
