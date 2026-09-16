@@ -13,7 +13,7 @@ Phase 1 (done, commits ab53b25..810689d): LFM2-350M fine-tune, ONNX swap, 8-bit,
 - [x] 7. Train on the RTX box, copy back, evaluate on holdout
 - [x] 8. Export (swap, 8-bit), serve, browser test incl. long-prompt latency
 
-- [ ] 9. LFM2.5-1.2B-Instruct (feln-liquid model) trained on GPU 1 with the same data; evaluate, decide on browser export (~1.5 GB 8-bit)
+- [x] 9. LFM2.5-1.2B-Instruct (feln-liquid model) trained on GPU 1 with the same data; evaluate, decide on browser export (~1.5 GB 8-bit)
 
 ## Decisions
 - Base model LFM2-350M; map ArcGIS JS SDK 5.1; browser model 8-bit MatMulNBits.

@@ -12,7 +12,7 @@
   140/175
   160/175
 
-=== val.jsonl n=175 /Users/user/GWorkspace/feln-webgpu/out/lfm2-350m-feln-v3-rtx ===
+=== val.jsonl n=175 ~/GWorkspace/feln-webgpu/out/lfm2-350m-feln-v3-rtx ===
   valid      175/175
   exact      169/175  96.6%
   structural 0.995

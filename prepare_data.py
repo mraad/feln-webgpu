@@ -30,7 +30,8 @@ def system_prompt(layers: list[dict], okf: Path | None) -> str:
         for layer in layers:
             doc = okf / f"{layer['name']}.md"
             lines += ["", doc.read_text().strip()]
-        return "\n".join(lines)
+        # the OKF docs embed absolute file:// paths under the author's home; ship them as /Users/user (a ~ costs one holdout question)
+        return "\n".join(lines).replace(str(Path.home()), "/Users/user")
     for layer in layers:
         cols = ", ".join(c["name"] for c in layer["columns"])
         lines.append(f"{layer['name']} ({layer['stype']}): {cols}")
